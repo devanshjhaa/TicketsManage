@@ -39,16 +39,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
+        System.out.println(">>> JWT FILTER PATH = " + request.getServletPath());
+
         final String authHeader =
                 request.getHeader(HttpHeaders.AUTHORIZATION);
 
+        System.out.println(">>> AUTH HEADER = " + authHeader);
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println(">>> NO BEARER TOKEN — SKIPPING");
             filterChain.doFilter(request, response);
             return;
         }
 
         String jwt = authHeader.substring(7);
         String username = jwtService.extractSubject(jwt);
+        String role = jwtService.extractRole(jwt);
+
+        System.out.println(">>> JWT SUBJECT = " + username);
+        System.out.println(">>> JWT ROLE = " + role);
 
         if (username != null &&
                 SecurityContextHolder.getContext()
@@ -58,11 +67,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails =
                     userDetailsService.loadUserByUsername(username);
 
-            String role = jwtService.extractRole(jwt);
-
             var authorities = List.of(
                     new SimpleGrantedAuthority("ROLE_" + role)
             );
+
+            System.out.println(">>> SETTING AUTH = " + authorities);
 
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(
@@ -82,6 +91,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
 
@@ -91,7 +101,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.startsWith("/actuator")
                 || path.equals("/health");
     }
-
-
-
 }

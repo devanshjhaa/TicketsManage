@@ -9,7 +9,13 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "ticket_comments")
+@Table(
+        name = "ticket_comments",
+        indexes = {
+                @Index(name = "idx_comment_ticket", columnList = "ticket_id"),
+                @Index(name = "idx_comment_author", columnList = "author_id")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,7 +24,7 @@ import java.util.UUID;
 public class TicketCommentEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -40,3 +46,4 @@ public class TicketCommentEntity {
         this.createdAt = Instant.now();
     }
 }
+

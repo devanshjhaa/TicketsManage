@@ -1,11 +1,16 @@
 package com.ticketsmanage.backend.ticket.controller;
 
-import com.ticketsmanage.backend.ticket.dto.CreateTicketRequest;
-import com.ticketsmanage.backend.ticket.dto.TicketResponse;
+import com.ticketsmanage.backend.ticket.dto.*;
+import com.ticketsmanage.backend.ticket.entity.TicketPriority;
+import com.ticketsmanage.backend.ticket.entity.TicketStatus;
 import com.ticketsmanage.backend.ticket.service.TicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,7 +22,17 @@ public class TicketController {
 
     private final TicketService ticketService;
 
-    // Create ticket
+    // -------------------------
+    // GET MY TICKETS
+    // -------------------------
+    @GetMapping("/my")
+    public List<TicketResponse> getMyTickets() {
+        return ticketService.getMyTickets();
+    }
+
+    // -------------------------
+    // CREATE TICKET
+    // -------------------------
     @PostMapping
     public TicketResponse createTicket(
             @RequestBody @Valid CreateTicketRequest request
@@ -25,15 +40,93 @@ public class TicketController {
         return ticketService.createTicket(request);
     }
 
-    // Get all tickets
+    // -------------------------
+    // GET ALL TICKETS (ROLE AWARE)
+    // -------------------------
     @GetMapping
     public List<TicketResponse> getAllTickets() {
         return ticketService.getAllTickets();
     }
 
-    // Get ticket by id
+    // -------------------------
+    // SEARCH / FILTER / PAGINATION
+    // -------------------------
+    @GetMapping("/search")
+    public Page<TicketResponse> searchTickets(
+            @RequestParam(required = false) TicketStatus status,
+            @RequestParam(required = false) TicketPriority priority,
+            @RequestParam(required = false) Boolean mine,
+            Pageable pageable
+    ) {
+        return ticketService.searchTickets(
+                status,
+                priority,
+                mine != null && mine,
+                pageable
+        );
+    }
+
+    // -------------------------
+    // GET TICKET BY ID
+    // -------------------------
     @GetMapping("/{id}")
-    public TicketResponse getTicketById(@PathVariable UUID id) {
+    public TicketResponse getTicketById(
+            @PathVariable UUID id
+    ) {
         return ticketService.getTicketById(id);
+    }
+
+    // -------------------------
+    // UPDATE STATUS
+    // -------------------------
+    @PutMapping("/{id}/status")
+    public TicketResponse updateStatus(
+            @PathVariable UUID id,
+            @RequestBody @Valid UpdateTicketStatusRequest request
+    ) {
+        return ticketService.updateStatus(id, request);
+    }
+
+    // -------------------------
+    // ASSIGN TICKET
+    // -------------------------
+    @PostMapping("/{id}/assign")
+    public TicketResponse assignTicket(
+            @PathVariable UUID id,
+            @RequestBody @Valid AssignTicketRequest request
+    ) {
+        return ticketService.assignTicket(id, request);
+    }
+
+    // -------------------------
+    // RATE TICKET
+    // -------------------------
+    @PostMapping("/{id}/rating")
+    public TicketResponse rateTicket(
+            @PathVariable UUID id,
+            @RequestBody @Valid RateTicketRequest request
+    ) {
+        return ticketService.rateTicket(id, request);
+    }
+
+    // -------------------------
+    // SOFT DELETE
+    // -------------------------
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteTicket(
+            @PathVariable UUID id
+    ) {
+        ticketService.softDeleteTicket(id);
+    }
+
+    // -------------------------
+    // RESTORE (ADMIN)
+    // -------------------------
+    @PostMapping("/{id}/restore")
+    public void restoreTicket(
+            @PathVariable UUID id
+    ) {
+        ticketService.restoreTicket(id);
     }
 }

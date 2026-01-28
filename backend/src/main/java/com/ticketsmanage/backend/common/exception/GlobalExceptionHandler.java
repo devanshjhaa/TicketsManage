@@ -1,19 +1,28 @@
 package com.ticketsmanage.backend.common.exception;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    // -------------------------
+    // VALIDATION ERRORS
+    // -------------------------
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<?> handleValidation(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request
+    ) {
 
         Map<String, String> errors = new HashMap<>();
 
@@ -23,16 +32,73 @@ public class GlobalExceptionHandler {
                         errors.put(err.getField(), err.getDefaultMessage())
                 );
 
-        return ResponseEntity
-                .badRequest()
-                .body(errors);
+        return ResponseEntity.badRequest().body(
+                new ApiError(
+                        400,
+                        "VALIDATION_ERROR",
+                        errors.toString(),
+                        request.getRequestURI(),
+                        Instant.now()
+                )
+        );
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<?> handleRuntime(RuntimeException ex) {
+    // -------------------------
+    // ACCESS DENIED
+    // -------------------------
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<?> handleAccessDenied(
+            AccessDeniedException ex,
+            HttpServletRequest request
+    ) {
 
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ApiError(
+                        403,
+                        "FORBIDDEN",
+                        ex.getMessage(),
+                        request.getRequestURI(),
+                        Instant.now()
+                ));
+    }
+
+    // -------------------------
+    // ILLEGAL ARGUMENT
+    // -------------------------
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgument(
+            IllegalArgumentException ex,
+            HttpServletRequest request
+    ) {
+
+        return ResponseEntity.badRequest()
+                .body(new ApiError(
+                        400,
+                        "BAD_REQUEST",
+                        ex.getMessage(),
+                        request.getRequestURI(),
+                        Instant.now()
+                ));
+    }
+
+    // -------------------------
+    // FALLBACK
+    // -------------------------
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleAny(
+            Exception ex,
+            HttpServletRequest request
+    ) {
+
+        ex.printStackTrace();
+
+        return ResponseEntity.status(500)
+                .body(new ApiError(
+                        500,
+                        "INTERNAL_ERROR",
+                        ex.getMessage(),
+                        request.getRequestURI(),
+                        Instant.now()
+                ));
     }
 }
