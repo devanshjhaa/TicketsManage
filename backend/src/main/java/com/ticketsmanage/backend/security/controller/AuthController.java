@@ -19,10 +19,28 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(
-            @RequestBody LoginRequest request
+            @RequestBody LoginRequest request,
+            jakarta.servlet.http.HttpServletResponse response
     ) {
-        return ResponseEntity.ok(authService.login(request));
+
+        AuthResponse authResponse = authService.login(request);
+
+        // authResponse must contain token
+        String token = authResponse.getAccessToken();
+
+        jakarta.servlet.http.Cookie cookie =
+                new jakarta.servlet.http.Cookie("accessToken", token);
+
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false); // true in prod
+        cookie.setPath("/");
+        cookie.setMaxAge(15 * 60);
+
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok(authResponse);
     }
+
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(

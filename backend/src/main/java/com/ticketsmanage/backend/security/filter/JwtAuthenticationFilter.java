@@ -33,64 +33,82 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+protected void doFilterInternal(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        FilterChain filterChain
+) throws ServletException, IOException {
 
-        System.out.println(">>> JWT FILTER PATH = " + request.getServletPath());
+    System.out.println(">>> JWT FILTER PATH = " + request.getServletPath());
 
-        final String authHeader =
-                request.getHeader(HttpHeaders.AUTHORIZATION);
+    String jwt = null;
 
-        System.out.println(">>> AUTH HEADER = " + authHeader);
+    // 1️⃣ Try Authorization header first
+    final String authHeader =
+            request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println(">>> NO BEARER TOKEN — SKIPPING");
-            filterChain.doFilter(request, response);
-            return;
-        }
+    System.out.println(">>> AUTH HEADER = " + authHeader);
 
-        String jwt = authHeader.substring(7);
-        String username = jwtService.extractSubject(jwt);
-        String role = jwtService.extractRole(jwt);
-
-        System.out.println(">>> JWT SUBJECT = " + username);
-        System.out.println(">>> JWT ROLE = " + role);
-
-        if (username != null &&
-                SecurityContextHolder.getContext()
-                        .getAuthentication() == null &&
-                jwtService.isTokenValid(jwt)) {
-
-            UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(username);
-
-            var authorities = List.of(
-                    new SimpleGrantedAuthority("ROLE_" + role)
-            );
-
-            System.out.println(">>> SETTING AUTH = " + authorities);
-
-            UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            authorities
-                    );
-
-            authToken.setDetails(
-                    new WebAuthenticationDetailsSource()
-                            .buildDetails(request)
-            );
-
-            SecurityContextHolder.getContext()
-                    .setAuthentication(authToken);
-        }
-
-        filterChain.doFilter(request, response);
+    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        jwt = authHeader.substring(7);
     }
+
+    // 2️⃣ If no header token, try cookie
+    if (jwt == null && request.getCookies() != null) {
+        for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+            if ("accessToken".equals(cookie.getName())) {
+                jwt = cookie.getValue();
+                break;
+            }
+        }
+    }
+
+    // 3️⃣ If still no token, continue filter chain
+    if (jwt == null) {
+        System.out.println(">>> NO JWT FOUND — SKIPPING");
+        filterChain.doFilter(request, response);
+        return;
+    }
+
+    String username = jwtService.extractSubject(jwt);
+    String role = jwtService.extractRole(jwt);
+
+    System.out.println(">>> JWT SUBJECT = " + username);
+    System.out.println(">>> JWT ROLE = " + role);
+
+    if (username != null &&
+            SecurityContextHolder.getContext()
+                    .getAuthentication() == null &&
+            jwtService.isTokenValid(jwt)) {
+
+        UserDetails userDetails =
+                userDetailsService.loadUserByUsername(username);
+
+        var authorities = List.of(
+                new SimpleGrantedAuthority("ROLE_" + role)
+        );
+
+        System.out.println(">>> SETTING AUTH = " + authorities);
+
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        authorities
+                );
+
+        authToken.setDetails(
+                new WebAuthenticationDetailsSource()
+                        .buildDetails(request)
+        );
+
+        SecurityContextHolder.getContext()
+                .setAuthentication(authToken);
+    }
+
+    filterChain.doFilter(request, response);
+}
+
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
