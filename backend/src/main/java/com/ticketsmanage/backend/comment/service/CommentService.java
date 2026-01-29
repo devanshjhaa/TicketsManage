@@ -7,6 +7,7 @@ import com.ticketsmanage.backend.comment.repository.TicketCommentRepository;
 import com.ticketsmanage.backend.security.util.SecurityUtils;
 import com.ticketsmanage.backend.ticket.entity.TicketEntity;
 import com.ticketsmanage.backend.ticket.repository.TicketRepository;
+import com.ticketsmanage.backend.ticketactivity.service.TicketActivityService;
 import com.ticketsmanage.backend.user.dto.UserSummaryDto;
 import com.ticketsmanage.backend.user.entity.UserEntity;
 import com.ticketsmanage.backend.user.entity.UserRole;
@@ -26,6 +27,7 @@ public class CommentService {
     private final TicketRepository ticketRepository;
     private final TicketCommentRepository commentRepository;
     private final UserRepository userRepository;
+    private final TicketActivityService ticketActivityService;
 
     // -------------------------
     // ADD COMMENT
@@ -39,7 +41,12 @@ public class CommentService {
         UserEntity currentUser = getCurrentUser();
 
         TicketEntity ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+                .orElseThrow(() ->
+                        new RuntimeException("Ticket not found"));
+
+        if (ticket.isDeleted()) {
+            throw new RuntimeException("Ticket not found");
+        }
 
         validateCanAccess(ticket, currentUser);
 
@@ -49,6 +56,14 @@ public class CommentService {
         comment.setContent(request.content());
 
         TicketCommentEntity saved = commentRepository.save(comment);
+
+        // 🔥 Activity log
+        ticketActivityService.log(
+                ticket,
+                currentUser,
+                "COMMENT_ADDED",
+                "Comment added"
+        );
 
         return toResponse(saved);
     }
@@ -62,7 +77,12 @@ public class CommentService {
         UserEntity currentUser = getCurrentUser();
 
         TicketEntity ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+                .orElseThrow(() ->
+                        new RuntimeException("Ticket not found"));
+
+        if (ticket.isDeleted()) {
+            throw new RuntimeException("Ticket not found");
+        }
 
         validateCanAccess(ticket, currentUser);
 
@@ -81,7 +101,8 @@ public class CommentService {
 
         return userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new RuntimeException("Authenticated user not found")
+                        new RuntimeException(
+                                "Authenticated user not found")
                 );
     }
 
@@ -90,14 +111,19 @@ public class CommentService {
             UserEntity user
     ) {
 
-        boolean isAdmin = user.getRole() == UserRole.ADMIN;
+        boolean isAdmin =
+                user.getRole() == UserRole.ADMIN;
 
         boolean isOwner =
-                ticket.getOwner().getId().equals(user.getId());
+                ticket.getOwner()
+                        .getId()
+                        .equals(user.getId());
 
         boolean isAssignee =
                 ticket.getAssignee() != null &&
-                        ticket.getAssignee().getId().equals(user.getId());
+                        ticket.getAssignee()
+                                .getId()
+                                .equals(user.getId());
 
         if (!(isAdmin || isOwner || isAssignee)) {
             throw new AccessDeniedException(
