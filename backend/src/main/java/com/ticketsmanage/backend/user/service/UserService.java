@@ -3,6 +3,7 @@ package com.ticketsmanage.backend.user.service;
 import com.ticketsmanage.backend.user.dto.UserResponse;
 import com.ticketsmanage.backend.user.entity.UserEntity;
 import com.ticketsmanage.backend.user.repository.UserRepository;
+import org.springframework.security.core.Authentication;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,15 @@ public class UserService {
     public UserResponse getUserById(UUID id) {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        return toResponse(user);
+    }
+    public UserResponse getCurrentUser(Authentication authentication) {
+
+        String email = authentication.getName();
+
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         return toResponse(user);
     }
 

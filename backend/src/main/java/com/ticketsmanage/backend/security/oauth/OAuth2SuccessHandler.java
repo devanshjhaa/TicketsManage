@@ -57,12 +57,22 @@ public class OAuth2SuccessHandler
                             return userRepository.save(u);
                         });
 
-        String token =
-                jwtService.generateToken(user);
+                String accessToken =
+        jwtService.generateToken(user);
 
-        String redirectUrl =
-                "http://localhost:3000/oauth-success?token=" + token;
+// create HttpOnly cookie
+jakarta.servlet.http.Cookie accessCookie =
+        new jakarta.servlet.http.Cookie("accessToken", accessToken);
 
-        response.sendRedirect(redirectUrl);
+accessCookie.setHttpOnly(true);
+accessCookie.setSecure(false); // true in prod with HTTPS
+accessCookie.setPath("/");
+accessCookie.setMaxAge(15 * 60); // 15 min
+
+response.addCookie(accessCookie);
+
+// redirect to frontend dashboard
+response.sendRedirect("http://localhost:3000/dashboard");
+
     }
 }

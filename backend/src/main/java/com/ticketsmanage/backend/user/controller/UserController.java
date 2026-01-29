@@ -26,4 +26,10 @@ public class UserController {
     public UserResponse getUserById(@PathVariable UUID id) {
         return UserService.getUserById(id);
     }
+
+    @GetMapping("/me")
+    public UserResponse getMe(org.springframework.security.core.Authentication authentication) {
+        return UserService.getCurrentUser(authentication);
+    }
+
 }
