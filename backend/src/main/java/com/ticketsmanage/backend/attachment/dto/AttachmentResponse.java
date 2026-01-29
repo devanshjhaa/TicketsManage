@@ -6,7 +6,7 @@ import java.util.UUID;
 public record AttachmentResponse(
         UUID id,
         String fileName,
-        String mimeType,
-        long sizeBytes,
-        Instant uploadedAt
+        String contentType,
+        long fileSize,
+        Instant createdAt
 ) {}

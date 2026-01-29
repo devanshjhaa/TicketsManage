@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "attachments")
+@Table(name = "ticket_attachments")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -32,20 +32,23 @@ public class AttachmentEntity {
     @Column(name = "file_name", nullable = false)
     private String fileName;
 
-    @Column(name = "mime_type", nullable = false)
-    private String mimeType;
+    @Column(name = "content_type")
+    private String contentType;
 
-    @Column(name = "storage_key", nullable = false)
-    private String storageKey;
+    @Column(name = "file_size", nullable = false)
+    private Long fileSize;
 
-    @Column(name = "size_bytes", nullable = false)
-    private Long sizeBytes;
+    @Column(name = "storage_path", nullable = false)
+    private String storagePath;
 
-    @Column(name = "uploaded_at", updatable = false)
-    private Instant uploadedAt;
+    @Column(nullable = false)
+    private boolean deleted = false;
+
+    @Column(name = "created_at", updatable = false)
+    private Instant createdAt;
 
     @PrePersist
     void onCreate() {
-        uploadedAt = Instant.now();
+        this.createdAt = Instant.now();
     }
 }

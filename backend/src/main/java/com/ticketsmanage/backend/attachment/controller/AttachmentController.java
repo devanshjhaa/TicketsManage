@@ -4,6 +4,8 @@ import com.ticketsmanage.backend.attachment.dto.AttachmentResponse;
 import com.ticketsmanage.backend.attachment.dto.UploadAttachmentResponse;
 import com.ticketsmanage.backend.attachment.service.AttachmentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,6 +19,9 @@ public class AttachmentController {
 
     private final AttachmentService attachmentService;
 
+    // -------------------------
+    // UPLOAD
+    // -------------------------
     @PostMapping
     public UploadAttachmentResponse upload(
             @PathVariable UUID ticketId,
@@ -25,8 +30,35 @@ public class AttachmentController {
         return attachmentService.upload(ticketId, file);
     }
 
+    // -------------------------
+    // LIST
+    // -------------------------
     @GetMapping
-    public List<AttachmentResponse> list(@PathVariable UUID ticketId) {
+    public List<AttachmentResponse> list(
+            @PathVariable UUID ticketId
+    ) {
         return attachmentService.getAttachments(ticketId);
+    }
+
+    // -------------------------
+    // DOWNLOAD / VIEW
+    // -------------------------
+    @GetMapping("/{attachmentId}/download")
+    public ResponseEntity<Resource> download(
+            @PathVariable UUID ticketId,
+            @PathVariable UUID attachmentId
+    ) {
+        return attachmentService.download(ticketId, attachmentId);
+    }
+
+    // -------------------------
+    // DELETE (SOFT)
+    // -------------------------
+    @DeleteMapping("/{attachmentId}")
+    public void delete(
+            @PathVariable UUID ticketId,
+            @PathVariable UUID attachmentId
+    ) {
+        attachmentService.softDelete(ticketId, attachmentId);
     }
 }
