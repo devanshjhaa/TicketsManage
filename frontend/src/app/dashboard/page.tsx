@@ -1,6 +1,6 @@
 "use client";
 
-import AppShell from "@/components/layout/AppShell";
+
 import { useMe } from "@/hooks/useMe";
 import { api } from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
@@ -164,7 +164,7 @@ export default function DashboardPage() {
   });
 
   return (
-    <AppShell>
+    <>
       <div className="mb-8">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Dashboard
@@ -260,6 +260,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }

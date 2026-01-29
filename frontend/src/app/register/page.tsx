@@ -1,5 +1,7 @@
 "use client";
 
+import { z } from "zod";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -20,6 +22,15 @@ export default function RegisterPage() {
         password: "",
         confirmPassword: ""
     });
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // Zod Schema for strong password
+    const registerSchema = z.object({
+        password: z.string().min(8, "Password must be at least 8 characters")
+            .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+            .regex(/[0-9]/, "Password must contain at least one number")
+            .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
+    });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -35,6 +46,14 @@ export default function RegisterPage() {
             });
             return;
         }
+
+        // Validate Zod
+        const result = registerSchema.safeParse({ password: formData.password });
+        if (!result.success) {
+            setErrors({ password: result.error.issues[0].message });
+            return;
+        }
+        setErrors({});
 
         try {
             setLoading(true);
@@ -120,6 +139,9 @@ export default function RegisterPage() {
                                 onChange={handleChange}
                                 required
                             />
+                            {errors.password && (
+                                <p className="text-xs text-destructive">{errors.password}</p>
+                            )}
                         </div>
                         <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" type="submit" disabled={loading}>
                             {loading ? "Creating account..." : "Create Account"}
