@@ -7,11 +7,15 @@ import "./globals.css";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "TicketsManage",
-  description: "Ticket Management System",
+  description: "Enterprise Ticket Management System",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
@@ -20,8 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased`}>
+    <html lang="en" className="h-full">
+      <body className={`${inter.variable} min-h-full bg-background font-sans antialiased`}>
         <Providers>{children}</Providers>
         <Toaster />
       </body>

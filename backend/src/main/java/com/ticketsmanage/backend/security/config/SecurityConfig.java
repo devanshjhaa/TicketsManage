@@ -27,72 +27,71 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final OAuth2SuccessHandler oAuth2SuccessHandler;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http)
-            throws Exception {
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http)
+                        throws Exception {
 
-        http
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> {})
-                .httpBasic(basic -> basic.disable())
-                .formLogin(form -> form.disable())
+                http
+                                .csrf(csrf -> csrf.disable())
+                                .cors(cors -> {
+                                })
+                                .httpBasic(basic -> basic.disable())
+                                .formLogin(form -> form.disable())
 
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/oauth2/**",
-                                "/health",
-                                "/actuator/**"
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                )
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers(
+                                                                "/api/auth/**",
+                                                                "/oauth2/**",
+                                                                "/health",
+                                                                "/api/auth/**",
+                                                                "/oauth2/**",
+                                                                "/health",
+                                                                "/actuator/**",
+                                                                "/api/test/**")
+                                                .permitAll()
+                                                .anyRequest().authenticated())
 
-                // OAuth2 login
-                .oauth2Login(oauth ->
-                        oauth.successHandler(oAuth2SuccessHandler)
-                )
+                                // OAuth2 login
+                                .oauth2Login(oauth -> oauth.successHandler(oAuth2SuccessHandler))
 
-                // JWT filter
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                );
+                                // JWT filter
+                                .addFilterBefore(
+                                                jwtAuthenticationFilter,
+                                                UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+                return http.build();
+        }
 
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config
-    ) throws Exception {
-        return config.getAuthenticationManager();
-    }
+        @Bean
+        public AuthenticationManager authenticationManager(
+                        AuthenticationConfiguration config) throws Exception {
+                return config.getAuthenticationManager();
+        }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of("http://localhost:3001"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
+                config.setAllowedOrigins(List.of("http://localhost:3001", "http://localhost:3000"));
+                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                config.setAllowedHeaders(List.of("*"));
+                config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", config);
 
-        return source;
-    }
+                return source;
+        }
 
 }

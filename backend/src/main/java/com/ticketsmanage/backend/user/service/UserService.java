@@ -28,6 +28,7 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return toResponse(user);
     }
+
     public UserResponse getCurrentUser(Authentication authentication) {
 
         String email = authentication.getName();
@@ -45,7 +46,7 @@ public class UserService {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getRole(),
-                user.isActive()
-        );
+                user.isActive(),
+                user.getProfilePictureUrl());
     }
 }

@@ -14,74 +14,67 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface TicketRepository extends JpaRepository<TicketEntity, UUID> {
+public interface TicketRepository extends JpaRepository<TicketEntity, UUID>,
+                org.springframework.data.jpa.repository.JpaSpecificationExecutor<TicketEntity> {
 
-    // BASIC
-    List<TicketEntity> findByOwner(UserEntity owner);
+        // BASIC
+        List<TicketEntity> findByOwner(UserEntity owner);
 
-    List<TicketEntity> findByAssignee(UserEntity assignee);
+        List<TicketEntity> findByAssignee(UserEntity assignee);
 
-    // WITH SOFT DELETE
-    Optional<TicketEntity> findByIdAndDeletedFalse(UUID id);
+        // WITH SOFT DELETE
+        Optional<TicketEntity> findByIdAndDeletedFalse(UUID id);
 
-    List<TicketEntity> findByOwnerAndDeletedFalse(UserEntity owner);
+        List<TicketEntity> findByOwnerAndDeletedFalse(UserEntity owner);
 
-    List<TicketEntity> findByAssigneeAndDeletedFalse(UserEntity assignee);
+        List<TicketEntity> findByAssigneeAndDeletedFalse(UserEntity assignee);
 
-    Page<TicketEntity> findByDeletedFalse(Pageable pageable);
+        Page<TicketEntity> findByDeletedFalse(Pageable pageable);
 
-    Page<TicketEntity> findByOwnerAndDeletedFalse(
-            UserEntity owner,
-            Pageable pageable
-    );
+        Page<TicketEntity> findByOwnerAndDeletedFalse(
+                        UserEntity owner,
+                        Pageable pageable);
 
-    Page<TicketEntity> findByAssigneeAndDeletedFalse(
-            UserEntity assignee,
-            Pageable pageable
-    );
+        Page<TicketEntity> findByAssigneeAndDeletedFalse(
+                        UserEntity assignee,
+                        Pageable pageable);
 
-    // FILTERING
-    Page<TicketEntity> findByStatusAndDeletedFalse(
-            TicketStatus status,
-            Pageable pageable
-    );
+        // FILTERING
+        Page<TicketEntity> findByStatusAndDeletedFalse(
+                        TicketStatus status,
+                        Pageable pageable);
 
-    Page<TicketEntity> findByPriorityAndDeletedFalse(
-            TicketPriority priority,
-            Pageable pageable
-    );
+        Page<TicketEntity> findByPriorityAndDeletedFalse(
+                        TicketPriority priority,
+                        Pageable pageable);
 
-    Page<TicketEntity> findByStatusAndPriorityAndDeletedFalse(
-            TicketStatus status,
-            TicketPriority priority,
-            Pageable pageable
-    );
+        Page<TicketEntity> findByStatusAndPriorityAndDeletedFalse(
+                        TicketStatus status,
+                        TicketPriority priority,
+                        Pageable pageable);
 
-    Page<TicketEntity> findByOwnerAndStatusAndDeletedFalse(
-            UserEntity owner,
-            TicketStatus status,
-            Pageable pageable
-    );
+        Page<TicketEntity> findByOwnerAndStatusAndDeletedFalse(
+                        UserEntity owner,
+                        TicketStatus status,
+                        Pageable pageable);
 
-    Page<TicketEntity> findByOwnerAndPriorityAndDeletedFalse(
-            UserEntity owner,
-            TicketPriority priority,
-            Pageable pageable
-    );
+        Page<TicketEntity> findByOwnerAndPriorityAndDeletedFalse(
+                        UserEntity owner,
+                        TicketPriority priority,
+                        Pageable pageable);
 
-    Page<TicketEntity> findByOwnerAndStatusAndPriorityAndDeletedFalse(
-            UserEntity owner,
-            TicketStatus status,
-            TicketPriority priority,
-            Pageable pageable
-    );
+        Page<TicketEntity> findByOwnerAndStatusAndPriorityAndDeletedFalse(
+                        UserEntity owner,
+                        TicketStatus status,
+                        TicketPriority priority,
+                        Pageable pageable);
 
-    // DASHBOARD STATS (already referenced earlier)
-    long countByDeletedFalse();
+        // DASHBOARD STATS (already referenced earlier)
+        long countByDeletedFalse();
 
-    long countByDeletedTrue();
+        long countByDeletedTrue();
 
-    long countByStatusAndDeletedFalse(TicketStatus status);
+        long countByStatusAndDeletedFalse(TicketStatus status);
 
-    long countByPriorityAndDeletedFalse(TicketPriority priority);
+        long countByPriorityAndDeletedFalse(TicketPriority priority);
 }

@@ -9,6 +9,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/admin/users")
@@ -22,8 +24,7 @@ public class AdminUserController {
     @PutMapping("/{id}/role")
     public void updateRole(
             @PathVariable UUID id,
-            @RequestBody @Valid UpdateUserRoleRequest request
-    ) {
+            @RequestBody @Valid UpdateUserRoleRequest request) {
         adminUserService.updateUserRole(id, request);
     }
 
@@ -31,8 +32,15 @@ public class AdminUserController {
     @PutMapping("/{id}/status")
     public void updateStatus(
             @PathVariable UUID id,
-            @RequestBody @Valid UpdateUserStatusRequest request
-    ) {
+            @RequestBody @Valid UpdateUserStatusRequest request) {
         adminUserService.updateUserStatus(id, request);
+    }
+
+    // UPLOAD PHOTO
+    @PostMapping(value = "/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public void uploadPhoto(
+            @PathVariable UUID id,
+            @RequestParam("file") MultipartFile file) {
+        adminUserService.updateUserPhoto(id, file);
     }
 }

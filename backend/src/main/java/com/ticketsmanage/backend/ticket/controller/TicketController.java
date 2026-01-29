@@ -25,22 +25,23 @@ public class TicketController {
 
     // GET MY TICKETS
     @GetMapping("/my")
-    public List<TicketResponse> getMyTickets() {
-        return ticketService.getMyTickets();
+    public Page<TicketResponse> getMyTickets(
+            @RequestParam(required = false) String q,
+            Pageable pageable) {
+        return ticketService.getMyTickets(q, pageable);
     }
 
     // CREATE TICKET
     @PostMapping
     public TicketResponse createTicket(
-            @RequestBody @Valid CreateTicketRequest request
-    ) {
+            @RequestBody @Valid CreateTicketRequest request) {
         return ticketService.createTicket(request);
     }
 
     // GET ALL TICKETS (ROLE AWARE)
     @GetMapping
-    public List<TicketResponse> getAllTickets() {
-        return ticketService.getAllTickets();
+    public Page<TicketResponse> getAllTickets(Pageable pageable) {
+        return ticketService.getAllTickets(pageable);
     }
 
     // SEARCH / FILTER / PAGINATION
@@ -49,21 +50,20 @@ public class TicketController {
             @RequestParam(required = false) TicketStatus status,
             @RequestParam(required = false) TicketPriority priority,
             @RequestParam(required = false) Boolean mine,
-            Pageable pageable
-    ) {
+            @RequestParam(required = false) String search,
+            Pageable pageable) {
         return ticketService.searchTickets(
                 status,
                 priority,
                 mine != null && mine,
-                pageable
-        );
+                search,
+                pageable);
     }
 
     // GET TICKET BY ID
     @GetMapping("/{id}")
     public TicketResponse getTicketById(
-            @PathVariable UUID id
-    ) {
+            @PathVariable UUID id) {
         return ticketService.getTicketById(id);
     }
 
@@ -71,8 +71,7 @@ public class TicketController {
     @PutMapping("/{id}/status")
     public TicketResponse updateStatus(
             @PathVariable UUID id,
-            @RequestBody @Valid UpdateTicketStatusRequest request
-    ) {
+            @RequestBody @Valid UpdateTicketStatusRequest request) {
         return ticketService.updateStatus(id, request);
     }
 
@@ -80,8 +79,7 @@ public class TicketController {
     @PostMapping("/{id}/assign")
     public TicketResponse assignTicket(
             @PathVariable UUID id,
-            @RequestBody @Valid AssignTicketRequest request
-    ) {
+            @RequestBody @Valid AssignTicketRequest request) {
         return ticketService.assignTicket(id, request);
     }
 
@@ -89,8 +87,7 @@ public class TicketController {
     @PostMapping("/{id}/rating")
     public TicketResponse rateTicket(
             @PathVariable UUID id,
-            @RequestBody @Valid RateTicketRequest request
-    ) {
+            @RequestBody @Valid RateTicketRequest request) {
         return ticketService.rateTicket(id, request);
     }
 
@@ -98,19 +95,18 @@ public class TicketController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTicket(
-            @PathVariable UUID id
-    ) {
+            @PathVariable UUID id) {
         ticketService.softDeleteTicket(id);
     }
 
     // RESTORE (ADMIN)
     @PostMapping("/{id}/restore")
     public void restoreTicket(
-            @PathVariable UUID id
-    ) {
+            @PathVariable UUID id) {
         ticketService.restoreTicket(id);
     }
-// ADMIN DASHBOARD
+
+    // ADMIN DASHBOARD
     @GetMapping("/admin/dashboard")
     @PreAuthorize("hasRole('ADMIN')")
     public AdminDashboardResponse getDashboard() {

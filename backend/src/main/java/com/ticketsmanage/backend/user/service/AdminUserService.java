@@ -10,80 +10,100 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class AdminUserService {
 
-    private final UserRepository userRepository;
+        private final UserRepository userRepository;
 
-    // UPDATE ROLE
-    @Transactional
-    public void updateUserRole(
-            UUID userId,
-            UpdateUserRoleRequest request
-    ) {
+        // UPDATE ROLE
+        @Transactional
+        public void updateUserRole(
+                        UUID userId,
+                        UpdateUserRoleRequest request) {
 
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found")
-                );
+                UserEntity user = userRepository.findById(userId)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Prevent removing last admin
-        if (user.getRole() == UserRole.ADMIN
-                && request.role() != UserRole.ADMIN) {
+                // Prevent removing last admin
+                if (user.getRole() == UserRole.ADMIN
+                                && request.role() != UserRole.ADMIN) {
 
-            long adminCount = userRepository.findAll()
-                    .stream()
-                    .filter(u -> u.getRole() == UserRole.ADMIN)
-                    .count();
+                        long adminCount = userRepository.findAll()
+                                        .stream()
+                                        .filter(u -> u.getRole() == UserRole.ADMIN)
+                                        .count();
 
-            if (adminCount <= 1) {
-                throw new RuntimeException(
-                        "Cannot remove the last admin"
-                );
-            }
+                        if (adminCount <= 1) {
+                                throw new RuntimeException(
+                                                "Cannot remove the last admin");
+                        }
+                }
+
+                user.setRole(request.role());
+
+                userRepository.save(user);
         }
 
-        user.setRole(request.role());
+        // ENABLE / DISABLE USER
+        @Transactional
+        public void updateUserStatus(
+                        UUID userId,
+                        UpdateUserStatusRequest request) {
 
-        userRepository.save(user);
-    }
+                UserEntity user = userRepository.findById(userId)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
 
-    // ENABLE / DISABLE USER
-    @Transactional
-    public void updateUserStatus(
-            UUID userId,
-            UpdateUserStatusRequest request
-    ) {
+                // Prevent disabling last active admin
+                if (user.getRole() == UserRole.ADMIN
+                                && !request.active()) {
 
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found")
-                );
+                        long activeAdmins = userRepository.findAll()
+                                        .stream()
+                                        .filter(u -> u.getRole() == UserRole.ADMIN &&
+                                                        u.isActive())
+                                        .count();
 
-        // Prevent disabling last active admin
-        if (user.getRole() == UserRole.ADMIN
-                && !request.active()) {
+                        if (activeAdmins <= 1) {
+                                throw new RuntimeException(
+                                                "Cannot disable the last active admin");
+                        }
+                }
 
-            long activeAdmins = userRepository.findAll()
-                    .stream()
-                    .filter(u ->
-                            u.getRole() == UserRole.ADMIN &&
-                                    u.isActive()
-                    )
-                    .count();
+                user.setActive(request.active());
 
-            if (activeAdmins <= 1) {
-                throw new RuntimeException(
-                        "Cannot disable the last active admin"
-                );
-            }
+                userRepository.save(user);
         }
 
-        user.setActive(request.active());
+        // UPLOAD PHOTO
+        @Transactional
+        public void updateUserPhoto(UUID userId, MultipartFile file) {
+                UserEntity user = userRepository.findById(userId)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        userRepository.save(user);
-    }
+                try {
+                        Path userDir = Paths.get("uploads/users").resolve(userId.toString());
+                        Files.createDirectories(userDir);
+
+                        String storedName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+                        Path targetPath = userDir.resolve(storedName);
+
+                        Files.copy(file.getInputStream(), targetPath);
+
+                        // Store the path relative to project root or accessible via API
+                        // Storing absolute string or relative string: "uploads/users/..."
+                        user.setProfilePictureUrl(targetPath.toString());
+                        userRepository.save(user);
+
+                } catch (IOException e) {
+                        throw new RuntimeException("Failed to store file", e);
+                }
+        }
 }
