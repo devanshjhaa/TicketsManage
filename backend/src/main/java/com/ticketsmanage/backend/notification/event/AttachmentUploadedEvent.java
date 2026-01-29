@@ -1,4 +1,9 @@
 package com.ticketsmanage.backend.notification.event;
 
-public class AttachmentUploadedEvent {
+import java.util.UUID;
+
+public record AttachmentUploadedEvent(
+        UUID ticketId,
+        UUID uploaderId
+) {
 }

@@ -23,17 +23,13 @@ public class TicketController {
 
     private final TicketService ticketService;
 
-    // -------------------------
     // GET MY TICKETS
-    // -------------------------
     @GetMapping("/my")
     public List<TicketResponse> getMyTickets() {
         return ticketService.getMyTickets();
     }
 
-    // -------------------------
     // CREATE TICKET
-    // -------------------------
     @PostMapping
     public TicketResponse createTicket(
             @RequestBody @Valid CreateTicketRequest request
@@ -41,17 +37,13 @@ public class TicketController {
         return ticketService.createTicket(request);
     }
 
-    // -------------------------
     // GET ALL TICKETS (ROLE AWARE)
-    // -------------------------
     @GetMapping
     public List<TicketResponse> getAllTickets() {
         return ticketService.getAllTickets();
     }
 
-    // -------------------------
     // SEARCH / FILTER / PAGINATION
-    // -------------------------
     @GetMapping("/search")
     public Page<TicketResponse> searchTickets(
             @RequestParam(required = false) TicketStatus status,
@@ -67,9 +59,7 @@ public class TicketController {
         );
     }
 
-    // -------------------------
     // GET TICKET BY ID
-    // -------------------------
     @GetMapping("/{id}")
     public TicketResponse getTicketById(
             @PathVariable UUID id
@@ -77,9 +67,7 @@ public class TicketController {
         return ticketService.getTicketById(id);
     }
 
-    // -------------------------
     // UPDATE STATUS
-    // -------------------------
     @PutMapping("/{id}/status")
     public TicketResponse updateStatus(
             @PathVariable UUID id,
@@ -88,9 +76,7 @@ public class TicketController {
         return ticketService.updateStatus(id, request);
     }
 
-    // -------------------------
     // ASSIGN TICKET
-    // -------------------------
     @PostMapping("/{id}/assign")
     public TicketResponse assignTicket(
             @PathVariable UUID id,
@@ -99,9 +85,7 @@ public class TicketController {
         return ticketService.assignTicket(id, request);
     }
 
-    // -------------------------
     // RATE TICKET
-    // -------------------------
     @PostMapping("/{id}/rating")
     public TicketResponse rateTicket(
             @PathVariable UUID id,
@@ -110,9 +94,7 @@ public class TicketController {
         return ticketService.rateTicket(id, request);
     }
 
-    // -------------------------
     // SOFT DELETE
-    // -------------------------
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTicket(
@@ -121,18 +103,14 @@ public class TicketController {
         ticketService.softDeleteTicket(id);
     }
 
-    // -------------------------
     // RESTORE (ADMIN)
-    // -------------------------
     @PostMapping("/{id}/restore")
     public void restoreTicket(
             @PathVariable UUID id
     ) {
         ticketService.restoreTicket(id);
     }
-    // -------------------------
 // ADMIN DASHBOARD
-// -------------------------
     @GetMapping("/admin/dashboard")
     @PreAuthorize("hasRole('ADMIN')")
     public AdminDashboardResponse getDashboard() {

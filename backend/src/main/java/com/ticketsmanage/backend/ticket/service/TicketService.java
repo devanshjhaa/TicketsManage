@@ -19,10 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+
 
 @Service
 @RequiredArgsConstructor
@@ -32,9 +30,7 @@ public class TicketService {
     private final UserRepository userRepository;
     private final TicketActivityService ticketActivityService;
 
-    // -------------------------
     // CREATE
-    // -------------------------
     public TicketResponse createTicket(CreateTicketRequest request) {
 
         UserEntity currentUser = getCurrentUser();
@@ -57,29 +53,19 @@ public class TicketService {
         return toResponse(saved);
     }
 
-    // -------------------------
     // GET MY
-    // -------------------------
-    @Transactional(readOnly = true)
     public List<TicketResponse> getMyTickets() {
 
         UserEntity currentUser = getCurrentUser();
 
-        return ticketRepository.findAll()
+        return ticketRepository
+                .findByOwnerAndDeletedFalse(currentUser)
                 .stream()
-                .filter(t -> !t.isDeleted())
-                .filter(t ->
-                        t.getOwner()
-                                .getId()
-                                .equals(currentUser.getId()))
                 .map(this::toResponse)
                 .toList();
     }
 
-    // -------------------------
     // GET ALL
-    // -------------------------
-    @Transactional(readOnly = true)
     public List<TicketResponse> getAllTickets() {
 
         UserEntity currentUser = getCurrentUser();
@@ -89,21 +75,17 @@ public class TicketService {
         if (currentUser.getRole() == UserRole.ADMIN) {
             tickets = ticketRepository.findAll();
         } else if (currentUser.getRole() == UserRole.SUPPORT_AGENT) {
-            tickets = ticketRepository.findByAssignee(currentUser);
+            tickets = ticketRepository.findByAssigneeAndDeletedFalse(currentUser);
         } else {
-            tickets = ticketRepository.findByOwner(currentUser);
+            tickets = ticketRepository.findByOwnerAndDeletedFalse(currentUser);
         }
 
         return tickets.stream()
-                .filter(t -> !t.isDeleted())
                 .map(this::toResponse)
                 .toList();
     }
 
-    // -------------------------
     // SEARCH
-    // -------------------------
-    @Transactional(readOnly = true)
     public Page<TicketResponse> searchTickets(
             TicketStatus status,
             TicketPriority priority,
@@ -118,94 +100,107 @@ public class TicketService {
         if (mine) {
 
             if (status != null && priority != null) {
-                tickets = ticketRepository
-                        .findByOwnerAndStatusAndPriorityAndDeletedFalse(
+                tickets =
+                        ticketRepository.findByOwnerAndStatusAndPriorityAndDeletedFalse(
                                 currentUser, status, priority, pageable);
 
             } else if (status != null) {
-                tickets = ticketRepository
-                        .findByOwnerAndStatusAndDeletedFalse(
+                tickets =
+                        ticketRepository.findByOwnerAndStatusAndDeletedFalse(
                                 currentUser, status, pageable);
 
             } else if (priority != null) {
-                tickets = ticketRepository
-                        .findByOwnerAndPriorityAndDeletedFalse(
+                tickets =
+                        ticketRepository.findByOwnerAndPriorityAndDeletedFalse(
                                 currentUser, priority, pageable);
 
             } else {
-                tickets = ticketRepository
-                        .findByOwnerAndDeletedFalse(
+                tickets =
+                        ticketRepository.findByOwnerAndDeletedFalse(
                                 currentUser, pageable);
             }
 
         } else {
 
             if (status != null && priority != null) {
-                tickets = ticketRepository
-                        .findByStatusAndPriorityAndDeletedFalse(
+                tickets =
+                        ticketRepository.findByStatusAndPriorityAndDeletedFalse(
                                 status, priority, pageable);
 
             } else if (status != null) {
-                tickets = ticketRepository
-                        .findByStatusAndDeletedFalse(
+                tickets =
+                        ticketRepository.findByStatusAndDeletedFalse(
                                 status, pageable);
 
             } else if (priority != null) {
-                tickets = ticketRepository
-                        .findByPriorityAndDeletedFalse(
+                tickets =
+                        ticketRepository.findByPriorityAndDeletedFalse(
                                 priority, pageable);
 
             } else {
-                tickets = ticketRepository
-                        .findByDeletedFalse(pageable);
+                tickets =
+                        ticketRepository.findByDeletedFalse(pageable);
             }
         }
 
         return tickets.map(this::toResponse);
     }
 
-    // -------------------------
     // GET BY ID
-    // -------------------------
-    @Transactional(readOnly = true)
     public TicketResponse getTicketById(UUID id) {
 
         UserEntity currentUser = getCurrentUser();
 
-        TicketEntity ticket = ticketRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Ticket not found"));
+        TicketEntity ticket =
+                ticketRepository.findByIdAndDeletedFalse(id)
+                        .orElseThrow(() ->
+                                new RuntimeException("Ticket not found"));
 
-        if (ticket.isDeleted()) {
-            throw new RuntimeException("Ticket not found");
-        }
+        boolean allowed =
+                ticket.getOwner().getId().equals(currentUser.getId())
+                        || (ticket.getAssignee() != null &&
+                        ticket.getAssignee().getId().equals(currentUser.getId()))
+                        || currentUser.getRole() == UserRole.ADMIN;
 
-        boolean isOwner =
-                ticket.getOwner()
-                        .getId()
-                        .equals(currentUser.getId());
-
-        boolean isAssignee =
-                ticket.getAssignee() != null &&
-                        ticket.getAssignee()
-                                .getId()
-                                .equals(currentUser.getId());
-
-        boolean isAdmin =
-                currentUser.getRole() == UserRole.ADMIN;
-
-        if (!(isOwner || isAssignee || isAdmin)) {
-            throw new AccessDeniedException(
-                    "You are not allowed to view this ticket");
+        if (!allowed) {
+            throw new AccessDeniedException("Forbidden");
         }
 
         return toResponse(ticket);
     }
 
-    // -------------------------
+    // STATUS
+    public TicketResponse updateStatus(
+            UUID ticketId,
+            UpdateTicketStatusRequest request
+    ) {
+
+        UserEntity currentUser = getCurrentUser();
+
+        TicketEntity ticket =
+                ticketRepository.findByIdAndDeletedFalse(ticketId)
+                        .orElseThrow(() ->
+                                new RuntimeException("Ticket not found"));
+
+        validateStatusTransition(ticket.getStatus(), request.status());
+
+        ticket.setStatus(request.status());
+
+        if (request.status() == TicketStatus.RESOLVED) {
+            ticket.setResolvedAt(Instant.now());
+        }
+
+        ticketActivityService.log(
+                ticket,
+                currentUser,
+                "STATUS_CHANGED",
+                "Changed to " + request.status()
+        );
+
+        return toResponse(ticket);
+    }
+
     // ASSIGN
-    // -------------------------
-    @Transactional
     public TicketResponse assignTicket(
             UUID ticketId,
             AssignTicketRequest request
@@ -216,80 +211,40 @@ public class TicketService {
         if (!(currentUser.getRole() == UserRole.ADMIN ||
                 currentUser.getRole() == UserRole.SUPPORT_AGENT)) {
 
-            throw new AccessDeniedException(
-                    "Only admins or support agents can assign tickets");
+            throw new AccessDeniedException("Forbidden");
         }
 
-        TicketEntity ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() ->
-                        new RuntimeException("Ticket not found"));
+        TicketEntity ticket =
+                ticketRepository.findByIdAndDeletedFalse(ticketId)
+                        .orElseThrow(() ->
+                                new RuntimeException("Ticket not found"));
 
-        UserEntity assignee = userRepository.findById(
-                request.assigneeId())
-                .orElseThrow(() ->
-                        new RuntimeException("Assignee not found"));
+        UserEntity assignee =
+                userRepository.findById(request.assigneeId())
+                        .orElseThrow(() ->
+                                new RuntimeException("User not found"));
 
         ticket.setAssignee(assignee);
 
-        TicketEntity saved = ticketRepository.save(ticket);
-
         ticketActivityService.log(
-                saved,
+                ticket,
                 currentUser,
                 "ASSIGNED",
-                "Assigned to " + assignee.getEmail());
+                "Assigned to " + assignee.getEmail()
+        );
 
-        return toResponse(saved);
+        return toResponse(ticket);
     }
 
-    // -------------------------
-    // STATUS
-    // -------------------------
-    @Transactional
-    public TicketResponse updateStatus(
-            UUID ticketId,
-            UpdateTicketStatusRequest request
-    ) {
-
-        UserEntity currentUser = getCurrentUser();
-
-        TicketEntity ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() ->
-                        new RuntimeException("Ticket not found"));
-
-        validateStatusTransition(
-                ticket.getStatus(),
-                request.status());
-
-        ticket.setStatus(request.status());
-
-        if (request.status() == TicketStatus.RESOLVED) {
-            ticket.setResolvedAt(Instant.now());
-        }
-
-        TicketEntity saved = ticketRepository.save(ticket);
-
-        ticketActivityService.log(
-                saved,
-                currentUser,
-                "STATUS_CHANGED",
-                "Changed to " + request.status());
-
-        return toResponse(saved);
-    }
-
-    // -------------------------
     // SOFT DELETE
-    // -------------------------
-    @Transactional
     public void softDeleteTicket(UUID id) {
 
         UserEntity currentUser = getCurrentUser();
 
-        TicketEntity ticket = ticketRepository
-                .findByIdAndDeletedFalse(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Ticket not found"));
+        TicketEntity ticket =
+                ticketRepository.findByIdAndDeletedFalse(id)
+                        .orElseThrow(() ->
+                                new RuntimeException("Ticket not found"));
 
         ticket.setDeleted(true);
 
@@ -297,20 +252,18 @@ public class TicketService {
                 ticket,
                 currentUser,
                 "SOFT_DELETED",
-                "Ticket marked deleted");
+                "Ticket deleted");
     }
 
-    // -------------------------
     // RESTORE
-    // -------------------------
-    @Transactional
     public void restoreTicket(UUID id) {
 
         UserEntity currentUser = getCurrentUser();
 
-        TicketEntity ticket = ticketRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Ticket not found"));
+        TicketEntity ticket =
+                ticketRepository.findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException("Ticket not found"));
 
         ticket.setDeleted(false);
 
@@ -321,52 +274,47 @@ public class TicketService {
                 "Ticket restored");
     }
 
-    // -------------------------
-    // RATE
-    // -------------------------
-    @Transactional
-    public TicketResponse rateTicket(
-            UUID ticketId,
-            RateTicketRequest request
-    ) {
+    // ADMIN DASHBOARD
+    public AdminDashboardResponse getAdminDashboard() {
 
         UserEntity currentUser = getCurrentUser();
 
-        TicketEntity ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() ->
-                        new RuntimeException("Ticket not found"));
-
-        if (ticket.getStatus() != TicketStatus.RESOLVED) {
-            throw new RuntimeException(
-                    "Ticket must be RESOLVED before rating");
+        if (currentUser.getRole() != UserRole.ADMIN) {
+            throw new AccessDeniedException("Admins only");
         }
 
-        ticket.setRating(request.rating());
-        ticket.setRatingComment(request.comment());
-        ticket.setStatus(TicketStatus.CLOSED);
+        Map<String, Long> statusCounts = new HashMap<>();
+        for (TicketStatus s : TicketStatus.values()) {
+            statusCounts.put(
+                    s.name(),
+                    ticketRepository.countByStatusAndDeletedFalse(s));
+        }
 
-        TicketEntity saved = ticketRepository.save(ticket);
+        Map<String, Long> priorityCounts = new HashMap<>();
+        for (TicketPriority p : TicketPriority.values()) {
+            priorityCounts.put(
+                    p.name(),
+                    ticketRepository.countByPriorityAndDeletedFalse(p));
+        }
 
-        ticketActivityService.log(
-                saved,
-                currentUser,
-                "RATED",
-                "Rating: " + request.rating());
-
-        return toResponse(saved);
+        return new AdminDashboardResponse(
+                ticketRepository.countByDeletedFalse(),
+                ticketRepository.countByDeletedTrue(),
+                statusCounts,
+                priorityCounts,
+                null,
+                Map.of()
+        );
     }
 
-    // -------------------------
     // HELPERS
-    // -------------------------
     private UserEntity getCurrentUser() {
 
         String email = SecurityUtils.getCurrentUsername();
 
-        return userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Authenticated user not found"));
+        return userRepository
+                .findByEmail(email)
+                .orElseThrow();
     }
 
     private void validateStatusTransition(
@@ -375,8 +323,7 @@ public class TicketService {
     ) {
 
         if (current == TicketStatus.CLOSED) {
-            throw new RuntimeException(
-                    "Closed tickets cannot be modified");
+            throw new RuntimeException("Closed tickets immutable");
         }
 
         if (current == next) return;
@@ -385,89 +332,38 @@ public class TicketService {
             case OPEN -> {
                 if (next != TicketStatus.IN_PROGRESS &&
                         next != TicketStatus.CLOSED)
-                    throw new RuntimeException(
-                            "OPEN → IN_PROGRESS/CLOSED only");
+                    throw new RuntimeException();
             }
             case IN_PROGRESS -> {
                 if (next != TicketStatus.RESOLVED &&
                         next != TicketStatus.CLOSED)
-                    throw new RuntimeException(
-                            "IN_PROGRESS → RESOLVED/CLOSED only");
+                    throw new RuntimeException();
             }
             case RESOLVED -> {
                 if (next != TicketStatus.CLOSED)
-                    throw new RuntimeException(
-                            "RESOLVED → CLOSED only");
+                    throw new RuntimeException();
             }
         }
     }
-        // -------------------------
-// ADMIN DASHBOARD
-// -------------------------
-@Transactional(readOnly = true)
-public AdminDashboardResponse getAdminDashboard() {
-
-    UserEntity currentUser = getCurrentUser();
-
-    if (currentUser.getRole() != UserRole.ADMIN) {
-        throw new AccessDeniedException("Admins only");
-    }
-
-    Map<String, Long> statusCounts = new HashMap<>();
-    for (TicketStatus s : TicketStatus.values()) {
-        statusCounts.put(
-                s.name(),
-                ticketRepository.countByStatusAndDeletedFalse(s)
-        );
-    }
-
-    Map<String, Long> priorityCounts = new HashMap<>();
-    for (TicketPriority p : TicketPriority.values()) {
-        priorityCounts.put(
-                p.name(),
-                ticketRepository.countByPriorityAndDeletedFalse(p)
-        );
-    }
-
-    Map<String, Long> perAgent = new HashMap<>();
-    for (Object[] row : ticketRepository.countTicketsPerAgent()) {
-        perAgent.put(
-                row[0].toString(),
-                (Long) row[1]
-        );
-    }
-
-    return new AdminDashboardResponse(
-
-            ticketRepository.countByDeletedFalse(),
-            ticketRepository.countByDeletedTrue(),
-
-            statusCounts,
-            priorityCounts,
-
-            ticketRepository.averageResolutionSeconds(),
-
-            perAgent
-    );
-}
-
 
     private TicketResponse toResponse(TicketEntity ticket) {
 
-        UserSummaryDto owner = new UserSummaryDto(
-                ticket.getOwner().getId(),
-                ticket.getOwner().getEmail(),
-                ticket.getOwner().getFirstName(),
-                ticket.getOwner().getLastName());
+        UserSummaryDto owner =
+                new UserSummaryDto(
+                        ticket.getOwner().getId(),
+                        ticket.getOwner().getEmail(),
+                        ticket.getOwner().getFirstName(),
+                        ticket.getOwner().getLastName());
 
         UserSummaryDto assignee = null;
 
         if (ticket.getAssignee() != null) {
-            assignee = new UserSummaryDto(
-                    ticket.getAssignee().getId(),
-                    ticket.getAssignee().getEmail(),
-                    ticket.getAssignee().getFirstName(),
-                    ticket.getAssignee().getLastName());
+            assignee =
+                    new UserSummaryDto(
+                            ticket.getAssignee().getId(),
+                            ticket.getAssignee().getEmail(),
+                            ticket.getAssignee().getFirstName(),
+                            ticket.getAssignee().getLastName());
         }
 
         return new TicketResponse(
@@ -484,4 +380,47 @@ public AdminDashboardResponse getAdminDashboard() {
                 ticket.getRating(),
                 ticket.getRatingComment());
     }
+
+    @Transactional
+    public TicketResponse rateTicket(
+            UUID ticketId,
+            RateTicketRequest request
+    ) {
+
+        UserEntity currentUser = getCurrentUser();
+
+        TicketEntity ticket =
+                ticketRepository.findByIdAndDeletedFalse(ticketId)
+                        .orElseThrow(() ->
+                                new RuntimeException("Ticket not found"));
+
+        // only owner can rate
+        if (!ticket.getOwner().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException(
+                    "Only ticket owner can rate");
+        }
+
+        if (ticket.getStatus() != TicketStatus.RESOLVED) {
+            throw new RuntimeException(
+                    "Ticket must be RESOLVED before rating");
+        }
+
+        if (ticket.getRating() != null) {
+            throw new RuntimeException(
+                    "Ticket already rated");
+        }
+
+        ticket.setRating(request.rating());
+        ticket.setRatingComment(request.comment());
+        ticket.setStatus(TicketStatus.CLOSED);
+
+        ticketActivityService.log(
+                ticket,
+                currentUser,
+                "RATED",
+                "Rating: " + request.rating());
+
+        return toResponse(ticket);
+    }
+
 }

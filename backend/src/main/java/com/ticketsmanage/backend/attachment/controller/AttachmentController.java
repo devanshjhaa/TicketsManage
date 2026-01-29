@@ -19,9 +19,7 @@ public class AttachmentController {
 
     private final AttachmentService attachmentService;
 
-    // -------------------------
     // UPLOAD
-    // -------------------------
     @PostMapping
     public UploadAttachmentResponse upload(
             @PathVariable UUID ticketId,
@@ -30,9 +28,7 @@ public class AttachmentController {
         return attachmentService.upload(ticketId, file);
     }
 
-    // -------------------------
     // LIST
-    // -------------------------
     @GetMapping
     public List<AttachmentResponse> list(
             @PathVariable UUID ticketId
@@ -40,9 +36,7 @@ public class AttachmentController {
         return attachmentService.getAttachments(ticketId);
     }
 
-    // -------------------------
     // DOWNLOAD / VIEW
-    // -------------------------
     @GetMapping("/{attachmentId}/download")
     public ResponseEntity<Resource> download(
             @PathVariable UUID ticketId,
@@ -51,9 +45,7 @@ public class AttachmentController {
         return attachmentService.download(ticketId, attachmentId);
     }
 
-    // -------------------------
     // DELETE (SOFT)
-    // -------------------------
     @DeleteMapping("/{attachmentId}")
     public void delete(
             @PathVariable UUID ticketId,

@@ -18,9 +18,7 @@ public class AdminUserController {
 
     private final AdminUserService adminUserService;
 
-    // -------------------------
     // UPDATE ROLE
-    // -------------------------
     @PutMapping("/{id}/role")
     public void updateRole(
             @PathVariable UUID id,
@@ -29,9 +27,7 @@ public class AdminUserController {
         adminUserService.updateUserRole(id, request);
     }
 
-    // -------------------------
     // ENABLE / DISABLE
-    // -------------------------
     @PutMapping("/{id}/status")
     public void updateStatus(
             @PathVariable UUID id,

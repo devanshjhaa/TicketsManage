@@ -5,15 +5,6 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
-  mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true
-
   jpa:
     open-in-view: false
     hibernate:
@@ -31,6 +22,18 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - openid
+              - email
+              - profile
+
 security:
   jwt:
     secret: my-super-secret-key-123456789012345678901234
@@ -42,3 +45,7 @@ logging:
 
 server:
   port: 8080
+
+resend:
+  api-key: ${RESEND_API_KEY}
+  from: ${MAIL_FROM}

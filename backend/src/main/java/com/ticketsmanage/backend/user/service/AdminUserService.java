@@ -18,9 +18,7 @@ public class AdminUserService {
 
     private final UserRepository userRepository;
 
-    // -------------------------
     // UPDATE ROLE
-    // -------------------------
     @Transactional
     public void updateUserRole(
             UUID userId,
@@ -53,9 +51,7 @@ public class AdminUserService {
         userRepository.save(user);
     }
 
-    // -------------------------
     // ENABLE / DISABLE USER
-    // -------------------------
     @Transactional
     public void updateUserStatus(
             UUID userId,

@@ -1,4 +1,9 @@
 package com.ticketsmanage.backend.notification.event;
 
-public class TicketAssignedEvent {
+import java.util.UUID;
+
+public record TicketAssignedEvent(
+        UUID ticketId,
+        UUID assigneeId
+) {
 }

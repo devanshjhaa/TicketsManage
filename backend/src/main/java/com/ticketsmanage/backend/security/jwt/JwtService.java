@@ -1,5 +1,6 @@
 package com.ticketsmanage.backend.security.jwt;
 
+import com.ticketsmanage.backend.user.entity.UserEntity;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -24,9 +25,7 @@ public class JwtService {
         this.expirationMs = expirationMs;
     }
 
-    // -------------------------
-    // Generate JWT with role
-    // -------------------------
+    // Generate JWT with subject + role
     public String generateToken(String subject, String role) {
 
         return Jwts.builder()
@@ -38,23 +37,21 @@ public class JwtService {
                 .compact();
     }
 
-    // -------------------------
-    // Extract subject (email)
-    // -------------------------
+    public String generateToken(UserEntity user) {
+        return generateToken(
+                user.getEmail(),
+                user.getRole().name()
+        );
+    }
+
     public String extractSubject(String token) {
         return extractAllClaims(token).getSubject();
     }
 
-    // -------------------------
-    // Extract role
-    // -------------------------
     public String extractRole(String token) {
         return extractAllClaims(token).get("role", String.class);
     }
 
-    // -------------------------
-    // Validate JWT
-    // -------------------------
     public boolean isTokenValid(String token) {
         try {
             extractAllClaims(token);
@@ -65,7 +62,6 @@ public class JwtService {
     }
 
     private Claims extractAllClaims(String token) {
-
         return Jwts.parser()
                 .verifyWith(key)
                 .build()

@@ -1,4 +1,9 @@
 package com.ticketsmanage.backend.notification.event;
 
-public class CommentAddedEvent {
+import java.util.UUID;
+
+public record CommentAddedEvent(
+        UUID ticketId,
+        UUID actorId
+) {
 }

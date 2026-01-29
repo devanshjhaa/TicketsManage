@@ -15,9 +15,7 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // -------------------------
     // VALIDATION ERRORS
-    // -------------------------
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleValidation(
             MethodArgumentNotValidException ex,
@@ -43,9 +41,7 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // -------------------------
     // ACCESS DENIED
-    // -------------------------
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<?> handleAccessDenied(
             AccessDeniedException ex,
@@ -62,9 +58,7 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    // -------------------------
     // ILLEGAL ARGUMENT
-    // -------------------------
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleIllegalArgument(
             IllegalArgumentException ex,
@@ -81,9 +75,7 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    // -------------------------
     // FALLBACK
-    // -------------------------
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleAny(
             Exception ex,

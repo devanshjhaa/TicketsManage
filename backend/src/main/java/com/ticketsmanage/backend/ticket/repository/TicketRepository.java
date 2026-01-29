@@ -4,11 +4,9 @@ import com.ticketsmanage.backend.ticket.entity.TicketEntity;
 import com.ticketsmanage.backend.ticket.entity.TicketPriority;
 import com.ticketsmanage.backend.ticket.entity.TicketStatus;
 import com.ticketsmanage.backend.user.entity.UserEntity;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -16,22 +14,19 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface TicketRepository
-        extends JpaRepository<TicketEntity, UUID> {
+public interface TicketRepository extends JpaRepository<TicketEntity, UUID> {
 
-    // --------------------------------------------------
     // BASIC
-    // --------------------------------------------------
-
     List<TicketEntity> findByOwner(UserEntity owner);
 
     List<TicketEntity> findByAssignee(UserEntity assignee);
 
+    // WITH SOFT DELETE
     Optional<TicketEntity> findByIdAndDeletedFalse(UUID id);
 
-    // --------------------------------------------------
-    // PAGED + SOFT DELETE
-    // --------------------------------------------------
+    List<TicketEntity> findByOwnerAndDeletedFalse(UserEntity owner);
+
+    List<TicketEntity> findByAssigneeAndDeletedFalse(UserEntity assignee);
 
     Page<TicketEntity> findByDeletedFalse(Pageable pageable);
 
@@ -45,6 +40,7 @@ public interface TicketRepository
             Pageable pageable
     );
 
+    // FILTERING
     Page<TicketEntity> findByStatusAndDeletedFalse(
             TicketStatus status,
             Pageable pageable
@@ -54,10 +50,6 @@ public interface TicketRepository
             TicketPriority priority,
             Pageable pageable
     );
-
-    // --------------------------------------------------
-    // SEARCH COMBINATIONS
-    // --------------------------------------------------
 
     Page<TicketEntity> findByStatusAndPriorityAndDeletedFalse(
             TicketStatus status,
@@ -84,10 +76,7 @@ public interface TicketRepository
             Pageable pageable
     );
 
-    // --------------------------------------------------
-    // DASHBOARD METRICS
-    // --------------------------------------------------
-
+    // DASHBOARD STATS (already referenced earlier)
     long countByDeletedFalse();
 
     long countByDeletedTrue();
@@ -95,23 +84,4 @@ public interface TicketRepository
     long countByStatusAndDeletedFalse(TicketStatus status);
 
     long countByPriorityAndDeletedFalse(TicketPriority priority);
-
-    // Average resolution time (seconds)
-    @Query(value = """
-        select avg(extract(epoch from (resolved_at - created_at)))
-        from tickets
-        where status = 'RESOLVED'
-          and deleted = false
-    """, nativeQuery = true)
-    Double averageResolutionSeconds();
-
-    // Tickets per agent
-    @Query("""
-        select t.assignee.id, count(t)
-        from TicketEntity t
-        where t.assignee is not null
-          and t.deleted = false
-        group by t.assignee.id
-    """)
-    List<Object[]> countTicketsPerAgent();
 }

@@ -11,27 +11,23 @@ import com.ticketsmanage.backend.user.entity.UserEntity;
 import com.ticketsmanage.backend.user.entity.UserRole;
 import com.ticketsmanage.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.io.IOException;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.*;
-import java.net.MalformedURLException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-
 import java.util.List;
 import java.util.UUID;
-
-
 
 @Service
 @RequiredArgsConstructor
@@ -44,9 +40,7 @@ public class AttachmentService {
     private static final Path BASE_DIR =
             Paths.get("uploads/tickets");
 
-    // -------------------------
     // UPLOAD
-    // -------------------------
     @Transactional
     public UploadAttachmentResponse upload(
             UUID ticketId,
@@ -64,24 +58,30 @@ public class AttachmentService {
 
         try {
 
-            Path ticketDir = BASE_DIR.resolve(ticketId.toString());
+            Path ticketDir =
+                    BASE_DIR.resolve(ticketId.toString());
+
             Files.createDirectories(ticketDir);
 
             String storedName =
-                    UUID.randomUUID() + "_" + file.getOriginalFilename();
+                    UUID.randomUUID() + "_" +
+                            file.getOriginalFilename();
 
-            Path targetPath = ticketDir.resolve(storedName);
+            Path targetPath =
+                    ticketDir.resolve(storedName);
 
             Files.copy(file.getInputStream(), targetPath);
 
-            AttachmentEntity entity = AttachmentEntity.builder()
-                    .ticket(ticket)
-                    .uploadedBy(currentUser)
-                    .fileName(file.getOriginalFilename())
-                    .contentType(file.getContentType())
-                    .fileSize(file.getSize())
-                    .storagePath(targetPath.toString())
-                    .build();
+            AttachmentEntity entity =
+                    AttachmentEntity.builder()
+                            .ticket(ticket)
+                            .uploadedBy(currentUser)
+                            .fileName(file.getOriginalFilename())
+                            .contentType(file.getContentType())
+                            .fileSize(file.getSize())
+                            .storagePath(targetPath.toString())
+                            .deleted(false)
+                            .build();
 
             AttachmentEntity saved =
                     attachmentRepository.save(entity);
@@ -94,9 +94,7 @@ public class AttachmentService {
         }
     }
 
-    // -------------------------
     // LIST
-    // -------------------------
     @Transactional(readOnly = true)
     public List<AttachmentResponse> getAttachments(
             UUID ticketId
@@ -118,9 +116,7 @@ public class AttachmentService {
                 .toList();
     }
 
-    // -------------------------
     // DOWNLOAD
-    // -------------------------
     @Transactional(readOnly = true)
     public ResponseEntity<Resource> download(
             UUID ticketId,
@@ -177,9 +173,7 @@ public class AttachmentService {
         }
     }
 
-    // -------------------------
     // SOFT DELETE
-    // -------------------------
     @Transactional
     public void softDelete(
             UUID ticketId,
@@ -205,12 +199,18 @@ public class AttachmentService {
                                 new RuntimeException(
                                         "Attachment not found"));
 
+        if (!attachment.getTicket()
+                .getId()
+                .equals(ticketId)) {
+
+            throw new RuntimeException(
+                    "Attachment does not belong to ticket");
+        }
+
         attachment.setDeleted(true);
     }
 
-    // -------------------------
     // SECURITY
-    // -------------------------
     private UserEntity getCurrentUser() {
 
         String email =
@@ -248,6 +248,7 @@ public class AttachmentService {
         }
     }
 
+    // MAPPING
     private AttachmentResponse toResponse(
             AttachmentEntity entity
     ) {
@@ -261,4 +262,3 @@ public class AttachmentService {
         );
     }
 }
-
