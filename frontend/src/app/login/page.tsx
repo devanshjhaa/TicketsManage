@@ -29,7 +29,11 @@ export default function LoginPage() {
       // Backend returns 'getAccessToken' field (Java record naming)
       const token = response.data.getAccessToken;
       if (token) {
+        // Store in localStorage for API requests
         localStorage.setItem("accessToken", token);
+
+        // Also store in cookie for middleware authentication check
+        document.cookie = `accessToken=${token}; path=/; max-age=${15 * 60}; SameSite=Lax`;
       }
 
       router.replace("/dashboard");
