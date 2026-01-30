@@ -46,11 +46,14 @@ export default function DashboardLayout({
             await api.post("/api/auth/logout");
         },
         onSuccess: () => {
+            localStorage.removeItem("accessToken");
+            document.cookie = "accessToken=; path=/; max-age=0";
             queryClient.clear();
             router.push("/login");
         },
         onError: () => {
-            // Even on error, try to redirect
+            localStorage.removeItem("accessToken");
+            document.cookie = "accessToken=; path=/; max-age=0";
             router.push("/login");
         },
     });
