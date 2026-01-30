@@ -24,7 +24,6 @@ import { api } from "@/lib/axios";
 import { useMe } from "@/hooks/useMe";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
     Select,
     SelectContent,

@@ -49,7 +49,10 @@ public class SecurityConfig {
                                                 .authenticationEntryPoint((request, response, authException) -> {
                                                         response.setContentType("application/json");
                                                         response.setStatus(401);
-                                                        response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"" + authException.getMessage() + "\"}");
+                                                        response.getWriter().write(
+                                                                        "{\"error\":\"Unauthorized\",\"message\":\""
+                                                                                        + authException.getMessage()
+                                                                                        + "\"}");
                                                 }))
 
                                 .authorizeHttpRequests(auth -> auth
@@ -62,6 +65,8 @@ public class SecurityConfig {
                                                                 "/health",
                                                                 "/actuator/**",
                                                                 "/api/test/**")
+                                                .permitAll()
+                                                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
                                                 .permitAll()
                                                 .anyRequest().authenticated())
 
@@ -91,7 +96,10 @@ public class SecurityConfig {
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration config = new CorsConfiguration();
 
-                config.setAllowedOrigins(List.of("http://localhost:3001", "http://localhost:3000"));
+                config.setAllowedOrigins(List.of(
+                                "http://localhost:3001",
+                                "http://localhost:3000",
+                                "https://tickets-manage-taupe.vercel.app"));
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 config.setAllowedHeaders(List.of("*"));
                 config.setAllowCredentials(true);

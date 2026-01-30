@@ -7,6 +7,7 @@ import com.ticketsmanage.backend.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -17,62 +18,45 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class OAuth2SuccessHandler
-        implements AuthenticationSuccessHandler {
+                implements AuthenticationSuccessHandler {
 
-    private final JwtService jwtService;
-    private final UserRepository userRepository;
+        private final JwtService jwtService;
+        private final UserRepository userRepository;
 
-    @Override
-    public void onAuthenticationSuccess(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Authentication authentication
-    ) throws IOException {
+        @Value("${app.frontend-url:http://localhost:3000}")
+        private String frontendUrl;
 
-        OAuth2User oauthUser =
-                (OAuth2User) authentication.getPrincipal();
+        @Override
+        public void onAuthenticationSuccess(
+                        HttpServletRequest request,
+                        HttpServletResponse response,
+                        Authentication authentication) throws IOException {
 
-        String email =
-                oauthUser.getAttribute("email");
+                OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
 
-        String name =
-                oauthUser.getAttribute("name");
+                String email = oauthUser.getAttribute("email");
 
-        String googleId =
-                oauthUser.getAttribute("sub");
+                String name = oauthUser.getAttribute("name");
 
-        UserEntity user =
-                userRepository.findByEmail(email)
-                        .orElseGet(() -> {
+                String googleId = oauthUser.getAttribute("sub");
 
-                            UserEntity u =
-                                    new UserEntity();
+                UserEntity user = userRepository.findByEmail(email)
+                                .orElseGet(() -> {
 
-                            u.setEmail(email);
-                            u.setGoogleId(googleId);
-                            u.setFirstName(name);
-                            u.setRole(UserRole.USER);
-                            u.setActive(true);
+                                        UserEntity u = new UserEntity();
 
-                            return userRepository.save(u);
-                        });
+                                        u.setEmail(email);
+                                        u.setGoogleId(googleId);
+                                        u.setFirstName(name);
+                                        u.setRole(UserRole.USER);
+                                        u.setActive(true);
 
-                String accessToken =
-        jwtService.generateToken(user);
+                                        return userRepository.save(u);
+                                });
 
-// create HttpOnly cookie
-jakarta.servlet.http.Cookie accessCookie =
-        new jakarta.servlet.http.Cookie("accessToken", accessToken);
+                String accessToken = jwtService.generateToken(user);
 
-accessCookie.setHttpOnly(true);
-accessCookie.setSecure(false); // true in prod with HTTPS
-accessCookie.setPath("/");
-accessCookie.setMaxAge(15 * 60); // 15 min
+                response.sendRedirect(frontendUrl + "/auth/callback?token=" + accessToken);
 
-response.addCookie(accessCookie);
-
-// redirect to frontend dashboard
-response.sendRedirect("http://localhost:3000/dashboard");
-
-    }
+        }
 }
