@@ -66,6 +66,9 @@ public class SecurityConfig {
                                                                 "/actuator/**",
                                                                 "/api/test/**")
                                                 .permitAll()
+                                                // Allow OPTIONS requests for CORS preflight
+                                                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
+                                                .permitAll()
                                                 .anyRequest().authenticated())
 
                                 // OAuth2 login
