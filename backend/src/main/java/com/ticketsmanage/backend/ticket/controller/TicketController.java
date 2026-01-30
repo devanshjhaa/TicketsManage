@@ -50,12 +50,14 @@ public class TicketController {
             @RequestParam(required = false) TicketStatus status,
             @RequestParam(required = false) TicketPriority priority,
             @RequestParam(required = false) Boolean mine,
+            @RequestParam(required = false) Boolean assigned,
             @RequestParam(required = false) String search,
             Pageable pageable) {
         return ticketService.searchTickets(
                 status,
                 priority,
                 mine != null && mine,
+                assigned != null && assigned,
                 search,
                 pageable);
     }

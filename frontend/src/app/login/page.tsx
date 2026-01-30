@@ -8,7 +8,7 @@ import { api } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { AnimatedCard } from "@/components/ui/animated-card";
+import { Ticket, CheckCircle2, Shield, Zap } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -24,7 +24,7 @@ export default function LoginPage() {
     try {
       setLoading(true);
       await api.post("/api/auth/login", { email, password });
-      router.push("/dashboard");
+      router.replace("/dashboard");
     } catch {
       toast({
         title: "Access Denied",
@@ -41,36 +41,39 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background selection:bg-primary selection:text-primary-foreground">
-      {/* Abstract Background Elements */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute -left-20 top-20 h-64 w-64 rounded-full bg-blue-500/10 blur-[100px]" />
-        <div className="absolute -right-20 bottom-20 h-80 w-80 rounded-full bg-violet-500/10 blur-[120px]" />
-        <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-zinc-500/5 blur-[80px]" />
-      </div>
+    <div className="flex min-h-screen">
+      {/* Left Panel - Login Form */}
+      <div className="flex w-full flex-col justify-center px-8 py-12 lg:w-1/2 lg:px-16 xl:px-24">
+        <div className="mx-auto w-full max-w-md">
+          {/* Logo */}
+          <Link href="/" className="inline-flex items-center gap-2 mb-8">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Ticket className="h-5 w-5" />
+            </div>
+            <span className="text-xl font-bold tracking-tight text-foreground">TicketsManage</span>
+          </Link>
 
-      <AnimatedCard className="z-10 w-full max-w-md border-zinc-200/60 bg-white/80 backdrop-blur-xl dark:border-zinc-800/60 dark:bg-zinc-950/80">
-        <div className="p-8">
-          <div className="mb-8 text-center">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 5v2" /><path d="M15 11v2" /><path d="M15 17v2" /><path d="M5 5h.01" /><path d="M5 11h.01" /><path d="M5 17h.01" /><path d="M19 19v-2a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v2" /><path d="M15 11V9a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v2" /></svg>
-            </motion.div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">TicketsManage</h1>
-            <p className="mt-2 text-sm text-muted-foreground">Enter your credentials to continue</p>
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              Log in to your account
+            </h1>
+            <p className="mt-2 text-muted-foreground">
+              Don&apos;t have an account?{" "}
+              <Link href="/register" className="font-medium text-primary hover:underline">
+                Sign Up
+              </Link>
+            </p>
           </div>
 
-          <div className="space-y-4">
+          {/* Social Login Buttons */}
+          <div className="space-y-3">
             <Button
               variant="outline"
-              className="relative w-full overflow-hidden border-zinc-200 bg-white hover:bg-zinc-50 hover:text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:hover:text-zinc-50"
+              className="relative w-full h-11 justify-center gap-3 border-zinc-300 bg-white hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800"
               onClick={handleGoogleLogin}
             >
-              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" viewBox="0 0 24 24">
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                   fill="#4285F4"
@@ -88,57 +91,125 @@ export default function LoginPage() {
                   fill="#EA4335"
                 />
               </svg>
-              Sign in with Google
+              Google
             </Button>
+          </div>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-zinc-200 dark:border-zinc-800" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-muted-foreground dark:bg-zinc-950">
-                  Or continue with email
-                </span>
-              </div>
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-zinc-200 dark:border-zinc-800" />
             </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Input
-                  type="email"
-                  placeholder="name@example.com"
-                  className="bg-transparent"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  className="bg-transparent"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" type="submit" disabled={loading}>
-                {loading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
-
-            <div className="mt-4 text-center text-sm">
-              <span className="text-muted-foreground">Don&apos;t have an account? </span>
-              <Link href="/register" className="font-medium text-primary hover:underline">
-                Sign up
-              </Link>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-4 text-muted-foreground">
+                Or with email and password
+              </span>
             </div>
           </div>
-        </div>
 
-        <div className="border-t border-zinc-100 bg-zinc-50/50 p-4 text-center text-xs text-muted-foreground dark:border-zinc-800 dark:bg-zinc-900/50">
-          Protected by secure enterprise authentication.
+          {/* Email/Password Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium text-foreground">
+                Email Address
+              </label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@example.com"
+                className="h-11"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium text-foreground">
+                Password
+              </label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                className="h-11"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <Button 
+              className="w-full h-11 mt-6" 
+              type="submit" 
+              disabled={loading || !email}
+            >
+              {loading ? "Signing in..." : "Next"}
+            </Button>
+          </form>
         </div>
-      </AnimatedCard>
+      </div>
+
+      {/* Right Panel - Feature Showcase */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary to-primary/80 p-12 text-primary-foreground">
+        <div className="flex flex-col justify-center max-w-lg mx-auto">
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-4xl font-bold mb-4">
+              Streamline Your Support Workflow
+            </h2>
+            <p className="text-lg opacity-90 mb-12">
+              Manage tickets efficiently, collaborate with your team, and deliver 
+              exceptional customer support with our powerful ticketing system.
+            </p>
+
+            {/* Feature List */}
+            <div className="space-y-6">
+              {[
+                {
+                  icon: Ticket,
+                  title: "Easy Ticket Management",
+                  description: "Create, track, and resolve tickets with ease",
+                },
+                {
+                  icon: Shield,
+                  title: "Role-Based Access",
+                  description: "Secure permissions for users, agents, and admins",
+                },
+                {
+                  icon: Zap,
+                  title: "Real-Time Updates",
+                  description: "Instant notifications and live status updates",
+                },
+                {
+                  icon: CheckCircle2,
+                  title: "Analytics Dashboard",
+                  description: "Track performance and resolution metrics",
+                },
+              ].map((feature, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
+                  className="flex items-start gap-4"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/20">
+                    <feature.icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">{feature.title}</h3>
+                    <p className="text-sm opacity-80">{feature.description}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </div>
     </div>
   );
 }

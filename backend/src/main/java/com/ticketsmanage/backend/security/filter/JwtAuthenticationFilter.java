@@ -55,12 +55,16 @@ protected void doFilterInternal(
 
     // 2️⃣ If no header token, try cookie
     if (jwt == null && request.getCookies() != null) {
+        System.out.println(">>> COOKIES FOUND: " + request.getCookies().length);
         for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+            System.out.println(">>> COOKIE: " + cookie.getName() + " = " + (cookie.getValue() != null ? cookie.getValue().substring(0, Math.min(20, cookie.getValue().length())) + "..." : "null"));
             if ("accessToken".equals(cookie.getName())) {
                 jwt = cookie.getValue();
                 break;
             }
         }
+    } else if (request.getCookies() == null) {
+        System.out.println(">>> NO COOKIES IN REQUEST");
     }
 
     // 3️⃣ If still no token, continue filter chain

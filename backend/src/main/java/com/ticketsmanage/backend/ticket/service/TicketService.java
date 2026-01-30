@@ -1,5 +1,8 @@
 package com.ticketsmanage.backend.ticket.service;
 
+import com.ticketsmanage.backend.notification.event.TicketAssignedEvent;
+import com.ticketsmanage.backend.notification.event.TicketCreatedEvent;
+import com.ticketsmanage.backend.notification.event.TicketStatusChangedEvent;
 import com.ticketsmanage.backend.security.util.SecurityUtils;
 import com.ticketsmanage.backend.ticket.dto.*;
 import com.ticketsmanage.backend.ticket.entity.TicketEntity;
@@ -12,6 +15,7 @@ import com.ticketsmanage.backend.user.entity.UserEntity;
 import com.ticketsmanage.backend.user.entity.UserRole;
 import com.ticketsmanage.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -28,8 +32,9 @@ public class TicketService {
         private final TicketRepository ticketRepository;
         private final UserRepository userRepository;
         private final TicketActivityService ticketActivityService;
+        private final ApplicationEventPublisher eventPublisher;
 
-        // CREATE
+        @Transactional
         public TicketResponse createTicket(CreateTicketRequest request) {
 
                 UserEntity currentUser = getCurrentUser();
@@ -48,11 +53,12 @@ public class TicketService {
                                 "CREATED",
                                 "Ticket created");
 
+                eventPublisher.publishEvent(new TicketCreatedEvent(saved.getId()));
+
                 return toResponse(saved);
         }
 
-        // GET MY
-        // GET MY
+        @Transactional(readOnly = true)
         public Page<TicketResponse> getMyTickets(String search, Pageable pageable) {
 
                 UserEntity currentUser = getCurrentUser();
@@ -64,8 +70,7 @@ public class TicketService {
                 return ticketRepository.findAll(spec, pageable).map(this::toResponse);
         }
 
-        // GET ALL
-        // GET ALL
+        @Transactional(readOnly = true)
         public Page<TicketResponse> getAllTickets(Pageable pageable) {
 
                 UserEntity currentUser = getCurrentUser();
@@ -85,30 +90,34 @@ public class TicketService {
                 return ticketRepository.findAll(spec, pageable).map(this::toResponse);
         }
 
-        // SEARCH
-        // SEARCH
+        @Transactional(readOnly = true)
         public Page<TicketResponse> searchTickets(
                         TicketStatus status,
                         TicketPriority priority,
                         boolean mine,
+                        boolean assigned,
                         String search,
                         Pageable pageable) {
                 UserEntity currentUser = getCurrentUser();
                 UserEntity owner = mine ? currentUser : null;
+                UserEntity assignee = assigned ? currentUser : null;
 
-                // If not mine & not admin/support, enforce owner=current
-                if (!mine && currentUser.getRole() == UserRole.USER) {
-                        owner = currentUser;
+                if (!mine && !assigned) {
+                        if (currentUser.getRole() == UserRole.USER) {
+                                owner = currentUser;
+                        } else if (currentUser.getRole() == UserRole.SUPPORT_AGENT) {
+                                assignee = currentUser;
+                        }
                 }
 
                 org.springframework.data.jpa.domain.Specification<TicketEntity> spec = com.ticketsmanage.backend.ticket.repository.TicketSpecification
                                 .withFilters(
-                                                status, priority, owner, null, search, false);
+                                                status, priority, owner, assignee, search, false);
 
                 return ticketRepository.findAll(spec, pageable).map(this::toResponse);
         }
 
-        // GET BY ID
+        @Transactional(readOnly = true)
         public TicketResponse getTicketById(UUID id) {
 
                 UserEntity currentUser = getCurrentUser();
@@ -128,7 +137,7 @@ public class TicketService {
                 return toResponse(ticket);
         }
 
-        // STATUS
+        @Transactional
         public TicketResponse updateStatus(
                         UUID ticketId,
                         UpdateTicketStatusRequest request) {
@@ -138,7 +147,20 @@ public class TicketService {
                 TicketEntity ticket = ticketRepository.findByIdAndDeletedFalse(ticketId)
                                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
 
-                validateStatusTransition(ticket.getStatus(), request.status());
+                boolean isOwner = ticket.getOwner().getId().equals(currentUser.getId());
+                boolean isAssignee = ticket.getAssignee() != null && 
+                                ticket.getAssignee().getId().equals(currentUser.getId());
+                boolean isAdmin = currentUser.getRole() == UserRole.ADMIN;
+                
+                if (!isOwner && !isAssignee && !isAdmin) {
+                        throw new AccessDeniedException("Only admin, assigned agent, or ticket owner can update status");
+                }
+
+                if (isOwner && !isAdmin && !isAssignee) {
+                        validateOwnerStatusTransition(ticket.getStatus(), request.status());
+                } else {
+                        validateStatusTransition(ticket.getStatus(), request.status());
+                }
 
                 ticket.setStatus(request.status());
 
@@ -146,16 +168,20 @@ public class TicketService {
                         ticket.setResolvedAt(Instant.now());
                 }
 
+                ticketRepository.save(ticket);
+
                 ticketActivityService.log(
                                 ticket,
                                 currentUser,
                                 "STATUS_CHANGED",
                                 "Changed to " + request.status());
 
+                eventPublisher.publishEvent(new TicketStatusChangedEvent(ticket.getId()));
+
                 return toResponse(ticket);
         }
 
-        // ASSIGN
+        @Transactional
         public TicketResponse assignTicket(
                         UUID ticketId,
                         AssignTicketRequest request) {
@@ -175,6 +201,7 @@ public class TicketService {
                                 .orElseThrow(() -> new RuntimeException("User not found"));
 
                 ticket.setAssignee(assignee);
+                ticketRepository.save(ticket);
 
                 ticketActivityService.log(
                                 ticket,
@@ -182,10 +209,12 @@ public class TicketService {
                                 "ASSIGNED",
                                 "Assigned to " + assignee.getEmail());
 
+                eventPublisher.publishEvent(new TicketAssignedEvent(ticket.getId(), assignee.getId()));
+
                 return toResponse(ticket);
         }
 
-        // SOFT DELETE
+        @Transactional
         public void softDeleteTicket(UUID id) {
 
                 UserEntity currentUser = getCurrentUser();
@@ -202,7 +231,7 @@ public class TicketService {
                                 "Ticket deleted");
         }
 
-        // RESTORE
+        @Transactional
         public void restoreTicket(UUID id) {
 
                 UserEntity currentUser = getCurrentUser();
@@ -250,14 +279,13 @@ public class TicketService {
                                         null,
                                         Map.of());
                 } catch (Exception e) {
-                        e.printStackTrace(); // Log key info
+                        e.printStackTrace();
                         throw new org.springframework.web.server.ResponseStatusException(
                                         org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
                                         "Dashboard Error: " + e.toString());
                 }
         }
 
-        // HELPERS
         private UserEntity getCurrentUser() {
 
                 String email = SecurityUtils.getCurrentUsername();
@@ -267,33 +295,26 @@ public class TicketService {
                                 .orElseThrow();
         }
 
-        private void validateStatusTransition(
+        private void validateOwnerStatusTransition(
                         TicketStatus current,
                         TicketStatus next) {
-
-                if (current == TicketStatus.CLOSED) {
-                        throw new RuntimeException("Closed tickets immutable");
-                }
 
                 if (current == next)
                         return;
 
-                switch (current) {
-                        case OPEN -> {
-                                if (next != TicketStatus.IN_PROGRESS &&
-                                                next != TicketStatus.CLOSED)
-                                        throw new RuntimeException();
-                        }
-                        case IN_PROGRESS -> {
-                                if (next != TicketStatus.RESOLVED &&
-                                                next != TicketStatus.CLOSED)
-                                        throw new RuntimeException();
-                        }
-                        case RESOLVED -> {
-                                if (next != TicketStatus.CLOSED)
-                                        throw new RuntimeException();
-                        }
+                if (current == TicketStatus.RESOLVED && next == TicketStatus.OPEN) {
+                        return;
                 }
+
+                throw new RuntimeException("Invalid status transition for ticket owner");
+        }
+
+        private void validateStatusTransition(
+                        TicketStatus current,
+                        TicketStatus next) {
+
+                if (current == next)
+                        return;
         }
 
         private TicketResponse toResponse(TicketEntity ticket) {
@@ -339,7 +360,6 @@ public class TicketService {
                 TicketEntity ticket = ticketRepository.findByIdAndDeletedFalse(ticketId)
                                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
 
-                // only owner can rate
                 if (!ticket.getOwner().getId().equals(currentUser.getId())) {
                         throw new AccessDeniedException(
                                         "Only ticket owner can rate");
@@ -357,7 +377,6 @@ public class TicketService {
 
                 ticket.setRating(request.rating());
                 ticket.setRatingComment(request.comment());
-                ticket.setStatus(TicketStatus.CLOSED);
 
                 ticketActivityService.log(
                                 ticket,

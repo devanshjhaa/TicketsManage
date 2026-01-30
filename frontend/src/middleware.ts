@@ -5,23 +5,25 @@ export function middleware(request: NextRequest) {
 
     // 1. Check for token
     const token = request.cookies.get('accessToken')?.value;
+    const { pathname } = request.nextUrl;
 
-    // 2. Define protected paths
-    const protectedPaths = ['/dashboard', '/tickets', '/admin'];
+    // 2. Define path groups
+    const authPaths = ['/login', '/register'];
+    const protectedPaths = ['/dashboard'];
 
-    const isProtected = protectedPaths.some((path) =>
-        request.nextUrl.pathname.startsWith(path)
-    );
+    // 3. Redirect if accessing auth pages while logged in
+    if (token && authPaths.some(path => pathname.startsWith(path))) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
 
-    // 3. Redirect if protected & no token
+    // 4. Redirect if accessing protected pages while logged out
+    const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
     if (isProtected && !token) {
         const loginUrl = new URL('/login', request.url);
-        // Optional: Add ?next=... to redirect back after login
-        // loginUrl.searchParams.set('next', request.nextUrl.pathname);
         return NextResponse.redirect(loginUrl);
     }
 
-    // 4. Continue
+    // 5. Continue
     return NextResponse.next();
 }
 
@@ -33,10 +35,8 @@ export const config = {
          * - _next/static (static files)
          * - _next/image (image optimization files)
          * - favicon.ico (favicon file)
-         * - login (login page)
-         * - register (register page)
          * - public (public assets)
          */
-        '/((?!api|_next/static|_next/image|favicon.ico|login|register|public).*)',
+        '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
     ],
 };

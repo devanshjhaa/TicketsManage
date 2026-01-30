@@ -7,6 +7,7 @@ import com.ticketsmanage.backend.security.jwt.JwtService;
 import com.ticketsmanage.backend.user.entity.UserEntity;
 import com.ticketsmanage.backend.user.entity.UserRole;
 import com.ticketsmanage.backend.user.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +20,12 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Value("${app.secret-code.admin:}")
+    private String adminSecretCode;
+
+    @Value("${app.secret-code.agent:}")
+    private String agentSecretCode;
 
     public AuthServiceImpl(
             AuthenticationManager authenticationManager,
@@ -64,13 +71,16 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("User already exists with email: " + request.email());
         }
 
+        // Determine role based on secret code
+        UserRole role = determineRole(request.secretCode());
+
         // create new user
         UserEntity user = UserEntity.builder()
                 .email(request.email())
                 .passwordHash(passwordEncoder.encode(request.password()))
                 .firstName(request.firstName())
                 .lastName(request.lastName())
-                .role(UserRole.USER)
+                .role(role)
                 .active(true)
                 .build();
 
@@ -83,5 +93,29 @@ public class AuthServiceImpl implements AuthService {
         );
 
         return new AuthResponse(token);
+    }
+
+    /**
+     * Determines the user role based on the provided secret code.
+     * - If adminSecretCode matches → ADMIN
+     * - If agentSecretCode matches → SUPPORT_AGENT
+     * - Otherwise → USER
+     */
+    private UserRole determineRole(String secretCode) {
+        if (secretCode == null || secretCode.isBlank()) {
+            return UserRole.USER;
+        }
+
+        if (adminSecretCode != null && !adminSecretCode.isBlank() 
+                && adminSecretCode.equals(secretCode)) {
+            return UserRole.ADMIN;
+        }
+
+        if (agentSecretCode != null && !agentSecretCode.isBlank() 
+                && agentSecretCode.equals(secretCode)) {
+            return UserRole.SUPPORT_AGENT;
+        }
+
+        return UserRole.USER;
     }
 }

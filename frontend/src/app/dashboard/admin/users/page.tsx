@@ -1,8 +1,9 @@
 "use client";
 
-import AppShell from "@/components/layout/AppShell";
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
+import { useMe } from "@/hooks/useMe";
 import {
     Table,
     TableBody,
@@ -24,7 +25,8 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { Upload, User as UserIcon } from "lucide-react";
+import { Upload, User as UserIcon, Shield, UserCog, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type User = {
     id: string;
@@ -33,20 +35,33 @@ type User = {
     lastName: string;
     role: string;
     active: boolean;
-    profilePictureUrl?: string; // Endpoint URL or null
+    profilePictureUrl?: string;
 };
+
+const ROLES = ["USER", "SUPPORT_AGENT", "ADMIN"];
 
 export default function AdminUsersPage() {
     const { toast } = useToast();
     const queryClient = useQueryClient();
+    const router = useRouter();
+    const { data: currentUser, isLoading: userLoading } = useMe();
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [uploading, setUploading] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+
+    // Redirect non-admins
+    useEffect(() => {
+        if (currentUser && currentUser.role !== "ADMIN") {
+            router.replace("/dashboard");
+        }
+    }, [currentUser, router]);
 
     const { data: users, isLoading } = useQuery<User[]>({
         queryKey: ["admin-users"],
+        enabled: !!currentUser && currentUser.role === "ADMIN",
         queryFn: async () => {
-            const res = await api.get("/api/users"); // Ensure this endpoint returns all users for admin
+            const res = await api.get("/api/users");
             return res.data;
         },
     });
@@ -71,6 +86,20 @@ export default function AdminUsersPage() {
         },
     });
 
+    const updateRoleMutation = useMutation({
+        mutationFn: async ({ id, role }: { id: string; role: string }) => {
+            await api.patch(`/api/admin/users/${id}/role`, { role });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+            toast({ title: "Role updated successfully" });
+            setIsRoleDialogOpen(false);
+        },
+        onError: () => {
+            toast({ title: "Failed to update role", variant: "destructive" });
+        },
+    });
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0] && selectedUser) {
             setUploading(true);
@@ -78,15 +107,29 @@ export default function AdminUsersPage() {
         }
     };
 
+    // Show loading while checking role
+    if (userLoading || (currentUser && currentUser.role !== "ADMIN")) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
     return (
-        <AppShell>
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                    User Management
-                </h1>
-                <p className="text-muted-foreground">
-                    Manage system users and agents.
-                </p>
+        <div className="mx-auto max-w-6xl px-4 py-6">
+            <div className="mb-8 flex items-center gap-4">
+                <Button variant="outline" size="icon" onClick={() => router.push("/dashboard")}>
+                    <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                        User Management
+                    </h1>
+                    <p className="text-muted-foreground">
+                        Manage system users, assign roles, and upload profile photos.
+                    </p>
+                </div>
             </div>
 
             <div className="rounded-md border bg-white dark:bg-zinc-950">
@@ -188,6 +231,6 @@ export default function AdminUsersPage() {
                     </TableBody>
                 </Table>
             </div>
-        </AppShell>
+        </div>
     );
 }

@@ -1,12 +1,15 @@
 package com.ticketsmanage.backend.user.controller;
 
+import com.ticketsmanage.backend.user.dto.AgentStatsResponse;
 import com.ticketsmanage.backend.user.dto.UserResponse;
 import com.ticketsmanage.backend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
+import java.io.IOException;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.MediaType;
@@ -22,13 +25,11 @@ public class UserController {
 
     private final UserService UserService;
 
-    // Get all users (ADMIN)
     @GetMapping
     public List<UserResponse> getAllUsers() {
         return UserService.getAllUsers();
     }
 
-    // Get one user by id
     @GetMapping("/{id}")
     public UserResponse getUserById(@PathVariable UUID id) {
         return UserService.getUserById(id);
@@ -39,7 +40,18 @@ public class UserController {
         return UserService.getCurrentUser(authentication);
     }
 
-    // SERVE PROFILE PICTURE
+    @GetMapping("/me/stats")
+    public AgentStatsResponse getAgentStats(org.springframework.security.core.Authentication authentication) {
+        return UserService.getAgentStats(authentication);
+    }
+
+    @PostMapping("/me/profile-picture")
+    public UserResponse uploadProfilePicture(
+            org.springframework.security.core.Authentication authentication,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        return UserService.updateProfilePicture(authentication, file);
+    }
+
     @GetMapping("/{id}/profile-picture")
     public ResponseEntity<Resource> getProfilePicture(@PathVariable UUID id) {
         UserResponse user = UserService.getUserById(id);
@@ -53,7 +65,7 @@ public class UserController {
 
             if (resource.exists() || resource.isReadable()) {
                 return ResponseEntity.ok()
-                        .contentType(MediaType.IMAGE_JPEG) // Naive, should detect type or use generic image/*
+                        .contentType(MediaType.IMAGE_JPEG)
                         .body(resource);
             } else {
                 return ResponseEntity.notFound().build();

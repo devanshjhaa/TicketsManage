@@ -13,35 +13,30 @@ import java.util.List;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository;
+        private final UserRepository userRepository;
 
-    public CustomUserDetailsService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+        public CustomUserDetailsService(UserRepository userRepository) {
+                this.userRepository = userRepository;
+        }
 
-    @Override
-    public UserDetails loadUserByUsername(String email)
-            throws UsernameNotFoundException {
+        @Override
+        public UserDetails loadUserByUsername(String email)
+                        throws UsernameNotFoundException {
 
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException(
-                                "User not found: " + email
-                        )
-                );
+                UserEntity user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new UsernameNotFoundException(
+                                                "User not found: " + email));
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
-                user.getPasswordHash(), // 👈 REAL HASH FROM DB
-                user.isActive(),
-                true,
-                true,
-                true,
-                List.of(
-                        new SimpleGrantedAuthority(
-                                "ROLE_" + user.getRole().name()
-                        )
-                )
-        );
-    }
+                return new org.springframework.security.core.userdetails.User(
+                                user.getEmail(),
+                                user.getPasswordHash() != null ? user.getPasswordHash() : "N/A", // Prevent null
+                                                                                                 // password crash
+                                user.isActive(),
+                                true,
+                                true,
+                                true,
+                                List.of(
+                                                new SimpleGrantedAuthority(
+                                                                "ROLE_" + user.getRole().name())));
+        }
 }

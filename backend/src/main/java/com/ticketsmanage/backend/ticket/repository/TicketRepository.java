@@ -77,4 +77,11 @@ public interface TicketRepository extends JpaRepository<TicketEntity, UUID>,
         long countByStatusAndDeletedFalse(TicketStatus status);
 
         long countByPriorityAndDeletedFalse(TicketPriority priority);
+
+        // AGENT STATS
+        long countByAssigneeAndDeletedFalse(UserEntity assignee);
+        
+        long countByAssigneeAndStatusAndDeletedFalse(UserEntity assignee, TicketStatus status);
+        
+        List<TicketEntity> findByAssigneeAndRatingIsNotNullAndDeletedFalse(UserEntity assignee);
 }

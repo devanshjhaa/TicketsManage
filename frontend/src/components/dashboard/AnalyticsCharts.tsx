@@ -29,10 +29,11 @@ const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
 export function AnalyticsCharts({ data }: { data: AdminDashboardData }) {
     // Transform Map to Array for Recharts
-    const statusData = Object.entries(data.statusCounts).map(([name, value]) => ({
-        name,
-        value,
-    }));
+    const statusData = Object.entries(data.statusCounts)
+        .map(([name, value]) => ({
+            name,
+            value,
+        }));
 
     const priorityData = Object.entries(data.priorityCounts).map(([name, value]) => ({
         name,
