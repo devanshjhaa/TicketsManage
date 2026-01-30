@@ -23,7 +23,14 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       setLoading(true);
-      await api.post("/api/auth/login", { email, password });
+      const response = await api.post("/api/auth/login", { email, password });
+
+      // Store token in localStorage for cross-domain authentication
+      const token = response.data.accessToken;
+      if (token) {
+        localStorage.setItem("accessToken", token);
+      }
+
       router.replace("/dashboard");
     } catch {
       toast({
@@ -139,9 +146,9 @@ export default function LoginPage() {
               />
             </div>
 
-            <Button 
-              className="w-full h-11 mt-6" 
-              type="submit" 
+            <Button
+              className="w-full h-11 mt-6"
+              type="submit"
               disabled={loading || !email}
             >
               {loading ? "Signing in..." : "Next"}
@@ -162,7 +169,7 @@ export default function LoginPage() {
               Streamline Your Support Workflow
             </h2>
             <p className="text-lg opacity-90 mb-12">
-              Manage tickets efficiently, collaborate with your team, and deliver 
+              Manage tickets efficiently, collaborate with your team, and deliver
               exceptional customer support with our powerful ticketing system.
             </p>
 
