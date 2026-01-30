@@ -11,6 +11,7 @@ import com.ticketsmanage.backend.user.entity.UserEntity;
 import com.ticketsmanage.backend.user.entity.UserRole;
 import com.ticketsmanage.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,232 +35,227 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AttachmentService {
 
-    private final AttachmentRepository attachmentRepository;
-    private final TicketRepository ticketRepository;
-    private final UserRepository userRepository;
+        private final AttachmentRepository attachmentRepository;
+        private final TicketRepository ticketRepository;
+        private final UserRepository userRepository;
+        private final S3Service s3Service;
 
-    private static final Path BASE_DIR =
-            Paths.get("uploads/tickets");
+        @Value("${aws.s3.enabled:false}")
+        private boolean s3Enabled;
 
-    // UPLOAD
-    @Transactional
-    public UploadAttachmentResponse upload(
-            UUID ticketId,
-            MultipartFile file
-    ) {
+        private static final Path BASE_DIR = Paths.get("uploads/tickets");
 
-        TicketEntity ticket =
-                ticketRepository.findByIdAndDeletedFalse(ticketId)
-                        .orElseThrow(() ->
-                                new RuntimeException("Ticket not found"));
+        // UPLOAD
+        @Transactional
+        public UploadAttachmentResponse upload(
+                        UUID ticketId,
+                        MultipartFile file) {
 
-        UserEntity currentUser = getCurrentUser();
+                TicketEntity ticket = ticketRepository.findByIdAndDeletedFalse(ticketId)
+                                .orElseThrow(() -> new RuntimeException("Ticket not found"));
 
-        validateCanAccess(ticket, currentUser);
+                UserEntity currentUser = getCurrentUser();
 
-        try {
+                validateCanAccess(ticket, currentUser);
 
-            Path ticketDir =
-                    BASE_DIR.resolve(ticketId.toString());
+                try {
+                        String storedName = UUID.randomUUID() + "_" +
+                                        file.getOriginalFilename();
 
-            Files.createDirectories(ticketDir);
+                        String storagePath;
 
-            String storedName =
-                    UUID.randomUUID() + "_" +
-                            file.getOriginalFilename();
+                        if (s3Enabled) {
+                                // S3 storage
+                                String s3Key = "tickets/" + ticketId + "/" + storedName;
+                                s3Service.uploadFile(file, s3Key);
+                                storagePath = s3Key;
+                        } else {
+                                // Local file storage
+                                Path ticketDir = BASE_DIR.resolve(ticketId.toString());
 
-            Path targetPath =
-                    ticketDir.resolve(storedName);
+                                Files.createDirectories(ticketDir);
 
-            Files.copy(file.getInputStream(), targetPath);
+                                Path targetPath = ticketDir.resolve(storedName);
 
-            AttachmentEntity entity =
-                    AttachmentEntity.builder()
-                            .ticket(ticket)
-                            .uploadedBy(currentUser)
-                            .fileName(file.getOriginalFilename())
-                            .contentType(file.getContentType())
-                            .fileSize(file.getSize())
-                            .storagePath(targetPath.toString())
-                            .deleted(false)
-                            .build();
+                                Files.copy(file.getInputStream(), targetPath);
+                                storagePath = targetPath.toString();
+                        }
 
-            AttachmentEntity saved =
-                    attachmentRepository.save(entity);
+                        AttachmentEntity entity = AttachmentEntity.builder()
+                                        .ticket(ticket)
+                                        .uploadedBy(currentUser)
+                                        .fileName(file.getOriginalFilename())
+                                        .contentType(file.getContentType())
+                                        .fileSize(file.getSize())
+                                        .storagePath(storagePath)
+                                        .deleted(false)
+                                        .build();
 
-            return new UploadAttachmentResponse(saved.getId());
+                        AttachmentEntity saved = attachmentRepository.save(entity);
 
-        } catch (IOException e) {
-            throw new RuntimeException(
-                    "Failed to store file", e);
-        }
-    }
+                        return new UploadAttachmentResponse(saved.getId());
 
-    // LIST
-    @Transactional(readOnly = true)
-    public List<AttachmentResponse> getAttachments(
-            UUID ticketId
-    ) {
-
-        TicketEntity ticket =
-                ticketRepository.findByIdAndDeletedFalse(ticketId)
-                        .orElseThrow(() ->
-                                new RuntimeException("Ticket not found"));
-
-        UserEntity currentUser = getCurrentUser();
-
-        validateCanAccess(ticket, currentUser);
-
-        return attachmentRepository
-                .findByTicketAndDeletedFalse(ticket)
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    // DOWNLOAD
-    @Transactional(readOnly = true)
-    public ResponseEntity<Resource> download(
-            UUID ticketId,
-            UUID attachmentId
-    ) {
-
-        AttachmentEntity attachment =
-                attachmentRepository
-                        .findByIdAndDeletedFalse(attachmentId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Attachment not found"));
-
-        TicketEntity ticket =
-                attachment.getTicket();
-
-        UserEntity currentUser =
-                getCurrentUser();
-
-        validateCanAccess(ticket, currentUser);
-
-        if (!ticket.getId().equals(ticketId)) {
-            throw new RuntimeException(
-                    "Attachment does not belong to ticket");
+                } catch (IOException e) {
+                        throw new RuntimeException(
+                                        "Failed to store file", e);
+                }
         }
 
-        try {
+        // LIST
+        @Transactional(readOnly = true)
+        public List<AttachmentResponse> getAttachments(
+                        UUID ticketId) {
 
-            Path path =
-                    Paths.get(
-                            attachment.getStoragePath());
+                TicketEntity ticket = ticketRepository.findByIdAndDeletedFalse(ticketId)
+                                .orElseThrow(() -> new RuntimeException("Ticket not found"));
 
-            Resource resource =
-                    new UrlResource(path.toUri());
+                UserEntity currentUser = getCurrentUser();
 
-            if (!resource.exists()) {
-                throw new RuntimeException(
-                        "File missing on disk");
-            }
+                validateCanAccess(ticket, currentUser);
 
-            return ResponseEntity.ok()
-                    .contentType(
-                            MediaType.parseMediaType(
-                                    attachment.getContentType()))
-                    .header(
-                            HttpHeaders.CONTENT_DISPOSITION,
-                            "inline; filename=\"" +
-                                    attachment.getFileName() + "\"")
-                    .body(resource);
-
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(
-                    "Invalid file path", e);
-        }
-    }
-
-    // SOFT DELETE
-    @Transactional
-    public void softDelete(
-            UUID ticketId,
-            UUID attachmentId
-    ) {
-
-        TicketEntity ticket =
-                ticketRepository
-                        .findByIdAndDeletedFalse(ticketId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Ticket not found"));
-
-        UserEntity currentUser =
-                getCurrentUser();
-
-        validateCanAccess(ticket, currentUser);
-
-        AttachmentEntity attachment =
-                attachmentRepository
-                        .findByIdAndDeletedFalse(attachmentId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Attachment not found"));
-
-        if (!attachment.getTicket()
-                .getId()
-                .equals(ticketId)) {
-
-            throw new RuntimeException(
-                    "Attachment does not belong to ticket");
+                return attachmentRepository
+                                .findByTicketAndDeletedFalse(ticket)
+                                .stream()
+                                .map(this::toResponse)
+                                .toList();
         }
 
-        attachment.setDeleted(true);
-    }
+        // DOWNLOAD
+        @Transactional(readOnly = true)
+        public ResponseEntity<Resource> download(
+                        UUID ticketId,
+                        UUID attachmentId) {
 
-    // SECURITY
-    private UserEntity getCurrentUser() {
+                AttachmentEntity attachment = attachmentRepository
+                                .findByIdAndDeletedFalse(attachmentId)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Attachment not found"));
 
-        String email =
-                SecurityUtils.getCurrentUsername();
+                TicketEntity ticket = attachment.getTicket();
 
-        return userRepository
-                .findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Authenticated user not found"));
-    }
+                UserEntity currentUser = getCurrentUser();
 
-    private void validateCanAccess(
-            TicketEntity ticket,
-            UserEntity user
-    ) {
+                validateCanAccess(ticket, currentUser);
 
-        boolean isAdmin =
-                user.getRole() == UserRole.ADMIN;
+                if (!ticket.getId().equals(ticketId)) {
+                        throw new RuntimeException(
+                                        "Attachment does not belong to ticket");
+                }
 
-        boolean isOwner =
-                ticket.getOwner()
-                        .getId()
-                        .equals(user.getId());
+                try {
+                        Resource resource;
 
-        boolean isAssignee =
-                ticket.getAssignee() != null &&
-                        ticket.getAssignee()
+                        if (s3Enabled) {
+                                // S3 storage
+                                InputStream inputStream = s3Service.downloadFile(attachment.getStoragePath());
+                                resource = new org.springframework.core.io.InputStreamResource(inputStream);
+                        } else {
+                                // Local file storage
+                                Path path = Paths.get(
+                                                attachment.getStoragePath());
+
+                                resource = new UrlResource(path.toUri());
+
+                                if (!resource.exists()) {
+                                        throw new RuntimeException(
+                                                        "File missing on disk");
+                                }
+                        }
+
+                        return ResponseEntity.ok()
+                                        .contentType(
+                                                        MediaType.parseMediaType(
+                                                                        attachment.getContentType()))
+                                        .header(
+                                                        HttpHeaders.CONTENT_DISPOSITION,
+                                                        "inline; filename=\"" +
+                                                                        attachment.getFileName() + "\"")
+                                        .body(resource);
+
+                } catch (MalformedURLException e) {
+                        throw new RuntimeException(
+                                        "Invalid file path", e);
+                }
+        }
+
+        // SOFT DELETE
+        @Transactional
+        public void softDelete(
+                        UUID ticketId,
+                        UUID attachmentId) {
+
+                TicketEntity ticket = ticketRepository
+                                .findByIdAndDeletedFalse(ticketId)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Ticket not found"));
+
+                UserEntity currentUser = getCurrentUser();
+
+                validateCanAccess(ticket, currentUser);
+
+                AttachmentEntity attachment = attachmentRepository
+                                .findByIdAndDeletedFalse(attachmentId)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Attachment not found"));
+
+                if (!attachment.getTicket()
+                                .getId()
+                                .equals(ticketId)) {
+
+                        throw new RuntimeException(
+                                        "Attachment does not belong to ticket");
+                }
+
+                // Mark as deleted in database
+                attachment.setDeleted(true);
+
+                // Optionally delete from S3 (we'll keep it for now, just soft delete in DB)
+                // if (s3Enabled) {
+                // s3Service.deleteFile(attachment.getStoragePath());
+                // }
+        }
+
+        // SECURITY
+        private UserEntity getCurrentUser() {
+
+                String email = SecurityUtils.getCurrentUsername();
+
+                return userRepository
+                                .findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Authenticated user not found"));
+        }
+
+        private void validateCanAccess(
+                        TicketEntity ticket,
+                        UserEntity user) {
+
+                boolean isAdmin = user.getRole() == UserRole.ADMIN;
+
+                boolean isOwner = ticket.getOwner()
                                 .getId()
                                 .equals(user.getId());
 
-        if (!(isAdmin || isOwner || isAssignee)) {
-            throw new AccessDeniedException(
-                    "You cannot access attachments for this ticket");
+                boolean isAssignee = ticket.getAssignee() != null &&
+                                ticket.getAssignee()
+                                                .getId()
+                                                .equals(user.getId());
+
+                if (!(isAdmin || isOwner || isAssignee)) {
+                        throw new AccessDeniedException(
+                                        "You cannot access attachments for this ticket");
+                }
         }
-    }
 
-    // MAPPING
-    private AttachmentResponse toResponse(
-            AttachmentEntity entity
-    ) {
+        // MAPPING
+        private AttachmentResponse toResponse(
+                        AttachmentEntity entity) {
 
-        return new AttachmentResponse(
-                entity.getId(),
-                entity.getFileName(),
-                entity.getContentType(),
-                entity.getFileSize(),
-                entity.getCreatedAt()
-        );
-    }
+                return new AttachmentResponse(
+                                entity.getId(),
+                                entity.getFileName(),
+                                entity.getContentType(),
+                                entity.getFileSize(),
+                                entity.getCreatedAt());
+        }
 }
