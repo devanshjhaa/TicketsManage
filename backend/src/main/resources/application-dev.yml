@@ -56,4 +56,4 @@ app:
   secret-code:
     admin: ${ADMIN_SECRET_CODE:ADMIN_SECRET_2026}
     agent: ${AGENT_SECRET_CODE:AGENT_SECRET_2026}
-  frontend-url: ${FRONTEND_URL:http://localhost:3000}
+  frontend-url: ${FRONTEND_URL:https://tickets-manage-taupe.vercel.app/}
