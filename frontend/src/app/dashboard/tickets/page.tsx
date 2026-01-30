@@ -9,6 +9,7 @@ import {
   Search,
   Plus,
   Filter,
+  RefreshCw,
   CheckCircle2,
   Clock,
   Circle,
@@ -99,7 +100,7 @@ export default function MyTicketsPage() {
     setPage(0);
   }, [debouncedSearch, statusFilter, priorityFilter]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["my-tickets", debouncedSearch, statusFilter, priorityFilter, page],
     queryFn: () => fetchMyTickets(debouncedSearch, statusFilter, priorityFilter, page, pageSize),
     enabled: !!user && user.role !== "ADMIN", // Don't fetch for admins
@@ -160,13 +161,24 @@ export default function MyTicketsPage() {
               <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">My Tickets</h1>
             </div>
           </div>
-          <button
-            onClick={() => router.push("/dashboard/tickets/new")}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 px-6 py-3 text-sm font-medium text-zinc-100 dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            New Ticket
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-3 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+              title="Refresh tickets"
+            >
+              <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+            <button
+              onClick={() => router.push("/dashboard/tickets/new")}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 px-6 py-3 text-sm font-medium text-zinc-100 dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              New Ticket
+            </button>
+          </div>
         </motion.div>
 
         {/* Search & Filters */}

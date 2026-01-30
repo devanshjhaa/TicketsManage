@@ -15,6 +15,7 @@ import {
     Inbox,
     ArrowRight,
     Filter,
+    RefreshCw,
     X,
     Star,
 } from "lucide-react";
@@ -76,10 +77,10 @@ export default function AssignedTicketsPage() {
         }
     }, [user, router]);
 
-    const { data: ticketsData, isLoading } = useQuery({
+    const { data: ticketsData, isLoading, refetch, isFetching } = useQuery({
         queryKey: ["assigned-tickets", search, statusFilter, priorityFilter, page],
         queryFn: async () => {
-            const params: Record<string, string> = { 
+            const params: Record<string, string> = {
                 assigned: "true",
                 page: page.toString(),
                 size: pageSize.toString(),
@@ -146,9 +147,15 @@ export default function AssignedTicketsPage() {
                             <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Assigned Tickets</h1>
                         </div>
                     </div>
-                    <div className="text-sm text-zinc-500 dark:text-zinc-400">
-                        {totalElements} ticket{totalElements !== 1 ? "s" : ""} assigned to you
-                    </div>
+                    <button
+                        onClick={() => refetch()}
+                        disabled={isFetching}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-3 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+                        title="Refresh tickets"
+                    >
+                        <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+                        Refresh
+                    </button>
                 </motion.div>
 
                 {/* Search & Filters */}
@@ -289,7 +296,7 @@ export default function AssignedTicketsPage() {
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-center gap-2">
-                                                    <h3 
+                                                    <h3
                                                         className="font-medium text-zinc-900 dark:text-zinc-100 truncate cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
                                                         onClick={() => router.push(`/dashboard/tickets/${ticket.id}`)}
                                                     >
@@ -298,8 +305,8 @@ export default function AssignedTicketsPage() {
                                                     {ticket.rating && (
                                                         <div className="flex items-center gap-0.5 shrink-0">
                                                             {Array.from({ length: 5 }).map((_, i) => (
-                                                                <Star 
-                                                                    key={i} 
+                                                                <Star
+                                                                    key={i}
                                                                     className={cn(
                                                                         "h-3 w-3",
                                                                         i < (ticket.rating || 0)
@@ -325,7 +332,7 @@ export default function AssignedTicketsPage() {
                                             <span className={cn("text-xs font-medium px-3 py-1.5 rounded-full", PRIORITY_CONFIG[ticket.priority])}>
                                                 {ticket.priority}
                                             </span>
-                                            
+
                                             {/* Status Dropdown */}
                                             <Select
                                                 defaultValue={ticket.status}

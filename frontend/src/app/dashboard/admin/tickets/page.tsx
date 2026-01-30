@@ -12,6 +12,7 @@ import {
     LucideIcon,
     Eye,
     UserPlus,
+    RefreshCw,
     ArrowLeft
 } from "lucide-react";
 
@@ -101,7 +102,7 @@ export default function AllTicketsPage() {
         }
     }, [user, router]);
 
-    const { data: ticketsData, isLoading } = useQuery({
+    const { data: ticketsData, isLoading, refetch, isFetching } = useQuery({
         queryKey: ["all-tickets", debouncedSearch, statusFilter, priorityFilter, page],
         queryFn: async () => {
             const params: Record<string, string> = {
@@ -177,6 +178,15 @@ export default function AllTicketsPage() {
                     <h1 className="text-3xl font-bold tracking-tight text-foreground">All Tickets</h1>
                     <p className="text-muted-foreground">View and manage all tickets in the system</p>
                 </div>
+                <Button
+                    onClick={() => refetch()}
+                    disabled={isFetching}
+                    variant="outline"
+                    className="gap-2"
+                >
+                    <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+                    Refresh
+                </Button>
             </div>
 
             {/* Filters */}
