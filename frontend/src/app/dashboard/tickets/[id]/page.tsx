@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { FileText, Download, Send, Paperclip, History, UserPlus, Star, ArrowLeft, Circle, Clock, CheckCircle2 } from "lucide-react";
+import { FileText, Download, Send, Paperclip, History, UserPlus, Star, ArrowLeft, Circle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ActivityFeed } from "@/components/ticket/ActivityFeed";
 import { RateTicketDialog } from "@/components/ticket/RateTicketDialog";
@@ -398,7 +398,7 @@ export default function TicketDetailPage() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Reopen this ticket if the issue isn't fully resolved.
+                  Reopen this ticket if the issue isn&apos;t fully resolved.
                 </p>
               </CardContent>
             </Card>
@@ -450,7 +450,7 @@ export default function TicketDetailPage() {
                       </div>
                       {ticket.ratingComment && (
                         <p className="mt-2 text-xs text-yellow-700 dark:text-yellow-300 italic">
-                          "{ticket.ratingComment}"
+                          &quot;{ticket.ratingComment}&quot;
                         </p>
                       )}
                     </div>
