@@ -7,6 +7,7 @@ import com.ticketsmanage.backend.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -21,6 +22,9 @@ public class OAuth2SuccessHandler
 
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    
+    @Value("${app.frontend-url:http://localhost:3000}")
+    private String frontendUrl;
 
     @Override
     public void onAuthenticationSuccess(
@@ -65,14 +69,14 @@ jakarta.servlet.http.Cookie accessCookie =
         new jakarta.servlet.http.Cookie("accessToken", accessToken);
 
 accessCookie.setHttpOnly(true);
-accessCookie.setSecure(false); // true in prod with HTTPS
+accessCookie.setSecure(true);
 accessCookie.setPath("/");
 accessCookie.setMaxAge(15 * 60); // 15 min
 
 response.addCookie(accessCookie);
 
 // redirect to frontend dashboard
-response.sendRedirect("http://localhost:3000/dashboard");
+response.sendRedirect(frontendUrl + "/dashboard");
 
     }
 }
