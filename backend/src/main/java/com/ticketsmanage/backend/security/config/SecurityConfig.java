@@ -99,7 +99,9 @@ public class SecurityConfig {
                 config.setAllowedOrigins(List.of(
                                 "http://localhost:3001",
                                 "http://localhost:3000",
-                                "https://tickets-manage-taupe.vercel.app"));
+                                "https://tickets-manage-taupe.vercel.app",
+                                "https://ticketsmanage.dev",
+                                "https://www.ticketsmanage.dev"));
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 config.setAllowedHeaders(List.of("*"));
                 config.setAllowCredentials(true);
