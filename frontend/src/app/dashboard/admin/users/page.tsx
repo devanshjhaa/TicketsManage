@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { Upload, User as UserIcon, Shield, UserCog, ArrowLeft } from "lucide-react";
+import { Upload, User as UserIcon, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 type User = {
@@ -38,8 +38,6 @@ type User = {
     profilePictureUrl?: string;
 };
 
-const ROLES = ["USER", "SUPPORT_AGENT", "ADMIN"];
-
 export default function AdminUsersPage() {
     const { toast } = useToast();
     const queryClient = useQueryClient();
@@ -48,7 +46,6 @@ export default function AdminUsersPage() {
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [uploading, setUploading] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
 
     // Redirect non-admins
     useEffect(() => {
@@ -83,20 +80,6 @@ export default function AdminUsersPage() {
         onError: () => {
             toast({ title: "Failed to upload photo", variant: "destructive" });
             setUploading(false);
-        },
-    });
-
-    const updateRoleMutation = useMutation({
-        mutationFn: async ({ id, role }: { id: string; role: string }) => {
-            await api.patch(`/api/admin/users/${id}/role`, { role });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-            toast({ title: "Role updated successfully" });
-            setIsRoleDialogOpen(false);
-        },
-        onError: () => {
-            toast({ title: "Failed to update role", variant: "destructive" });
         },
     });
 
