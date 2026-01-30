@@ -25,14 +25,9 @@ export default function LoginPage() {
       setLoading(true);
       const response = await api.post("/api/auth/login", { email, password });
 
-      // Store token in localStorage for cross-domain authentication
-      // Backend returns 'getAccessToken' field (Java record naming)
       const token = response.data.getAccessToken;
       if (token) {
-        // Store in localStorage for API requests
         localStorage.setItem("accessToken", token);
-
-        // Also store in cookie for middleware authentication check
         document.cookie = `accessToken=${token}; path=/; max-age=${15 * 60}; SameSite=Lax`;
       }
 
