@@ -2,6 +2,14 @@
 
 A full-stack support ticket management system built with Spring Boot and Next.js, deployed on AWS.
 
+## Screenshots
+
+![User Dashboard](docs/screenshots/dashboard.png)
+
+![Admin Analytics](docs/screenshots/admin-analytics.png)
+
+![Email Notifications](docs/screenshots/email-notification.png)
+
 ## What it does
 
 - Users create support tickets and track their progress
