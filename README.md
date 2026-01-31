@@ -31,6 +31,9 @@ A full-stack support ticket management system built with Spring Boot and Next.js
 - Comments and activity history
 - Post-resolution ratings
 - Admin analytics dashboard
+- Code for SignUP Admin - ADMIN_SECRET_AWS_2026
+- Code for signUP Agent - AGENT_SECRET_AWS_2026
+
 
 ## Running Locally
 
