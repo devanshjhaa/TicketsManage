@@ -26,7 +26,7 @@ public class AuthController {
         AuthResponse authResponse = authService.login(request);
 
         // authResponse must contain token
-        String token = authResponse.getAccessToken();
+        String token = authResponse.accessToken();
 
         // Use Set-Cookie header directly for better control over SameSite attribute
         int maxAge = 15 * 60; // 15 minutes
