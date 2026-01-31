@@ -81,12 +81,30 @@ export default function RegisterPage() {
                 description: "You can now sign in with your credentials.",
             });
             router.push("/login");
-        } catch {
-            toast({
-                title: "Registration failed",
-                description: "Could not create account. Please try again.",
-                variant: "destructive",
-            });
+        } catch (error: unknown) {
+            // Check for specific error messages from backend
+            const err = error as { response?: { data?: { message?: string } } };
+            const errorMessage = err?.response?.data?.message || "";
+            
+            if (errorMessage.toLowerCase().includes("secret code") || errorMessage.toLowerCase().includes("invalid")) {
+                toast({
+                    title: "Invalid Secret Code",
+                    description: "The secret code you entered is incorrect. Leave it empty to register as a regular user.",
+                    variant: "destructive",
+                });
+            } else if (errorMessage.toLowerCase().includes("already exists")) {
+                toast({
+                    title: "Email Already Registered",
+                    description: "An account with this email already exists. Please login instead.",
+                    variant: "destructive",
+                });
+            } else {
+                toast({
+                    title: "Registration failed",
+                    description: "Could not create account. Please try again.",
+                    variant: "destructive",
+                });
+            }
         } finally {
             setLoading(false);
         }

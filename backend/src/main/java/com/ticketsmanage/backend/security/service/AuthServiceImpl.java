@@ -99,6 +99,7 @@ public class AuthServiceImpl implements AuthService {
      * Determines the user role based on the provided secret code.
      * - If adminSecretCode matches → ADMIN
      * - If agentSecretCode matches → SUPPORT_AGENT
+     * - If secretCode is provided but invalid → throws exception
      * - Otherwise → USER
      */
     private UserRole determineRole(String secretCode) {
@@ -116,6 +117,7 @@ public class AuthServiceImpl implements AuthService {
             return UserRole.SUPPORT_AGENT;
         }
 
-        return UserRole.USER;
+        // If a secret code was provided but didn't match any role, it's invalid
+        throw new IllegalArgumentException("Invalid secret code. Please check your code and try again.");
     }
 }
