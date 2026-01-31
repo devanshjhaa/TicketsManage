@@ -6,7 +6,7 @@
 
 ## Why I Built This
 
-I built TicketsManage to understand how real support platforms are designed end-to-end — not just APIs, but authentication flows, role-based access, analytics queries, file storage, and production-style AWS deployment.
+I built TicketsManage to learn how real support systems work end-to-end — from authentication and role management to file storage and AWS deployment.
 
 The main goals were:
 
@@ -36,6 +36,8 @@ Frontend (Next.js on Amplify)  →  Spring Boot API on EC2  →  RDS PostgreSQL
                                         →  S3 (Attachments)
                                         →  Resend (Emails)
 ```
+
+This setup was chosen to mirror a small production environment while staying within AWS free-tier limits.
 
 - Frontend is deployed through AWS Amplify with automatic builds from GitHub.
 - Backend runs inside a Docker container on an EC2 t3.micro instance.
@@ -277,14 +279,8 @@ AWS runs in parallel with the Render/Vercel setup.
 
 ---
 
-## What This Project Demonstrates
+## What I Learned
 
-- End-to-end full-stack development.
-- OAuth + JWT security flows.
-- Role-based access systems.
-- Production-style AWS infrastructure.
-- Dockerized backend services.
-- Secure file storage.
-- Database migrations.
-- CI/CD pipelines.
-- DNS and HTTPS setup.
+Through this project I worked across the full stack, from designing APIs and schemas to deploying and operating the system on AWS. It helped me understand authentication flows, database migrations, cloud permissions, and release pipelines in practice.
+
+The biggest takeaways were debugging OAuth across different environments, getting Flyway to run cleanly inside Docker, and figuring out IAM roles for S3 access from EC2.
