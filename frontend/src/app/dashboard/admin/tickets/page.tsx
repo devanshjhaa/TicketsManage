@@ -13,7 +13,8 @@ import {
     Eye,
     UserPlus,
     RefreshCw,
-    ArrowLeft
+    ArrowLeft,
+    Trash2
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -154,6 +155,25 @@ export default function AllTicketsPage() {
         },
     });
 
+    const deleteMutation = useMutation({
+        mutationFn: async (ticketId: string) => {
+            await api.delete(`/api/tickets/${ticketId}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["all-tickets"] });
+            toast({ title: "Ticket deleted successfully" });
+        },
+        onError: () => {
+            toast({ title: "Failed to delete ticket", variant: "destructive" });
+        },
+    });
+
+    const handleDelete = (ticketId: string, ticketTitle: string) => {
+        if (confirm(`Are you sure you want to delete ticket "${ticketTitle}"? This action can be undone by restoring the ticket.`)) {
+            deleteMutation.mutate(ticketId);
+        }
+    };
+
     const tickets: Ticket[] = Array.isArray(ticketsData) ? ticketsData : (ticketsData?.content || []);
     // Only SUPPORT_AGENT can be assigned to tickets (not ADMIN)
     const agents = users?.filter(u => u.role === "SUPPORT_AGENT") || [];
@@ -238,7 +258,7 @@ export default function AllTicketsPage() {
                             <TableHead>Priority</TableHead>
                             <TableHead>Assignee</TableHead>
                             <TableHead>Created</TableHead>
-                            <TableHead className="w-[80px]">Actions</TableHead>
+                            <TableHead className="w-[120px]">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -346,14 +366,27 @@ export default function AllTicketsPage() {
                                             {format(new Date(ticket.createdAt), "MMM d, yyyy")}
                                         </TableCell>
                                         <TableCell>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8"
-                                                onClick={() => router.push(`/dashboard/tickets/${ticket.id}`)}
-                                            >
-                                                <Eye className="h-4 w-4" />
-                                            </Button>
+                                            <div className="flex items-center gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8"
+                                                    onClick={() => router.push(`/dashboard/tickets/${ticket.id}`)}
+                                                    title="View ticket"
+                                                >
+                                                    <Eye className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                    onClick={() => handleDelete(ticket.id, ticket.title)}
+                                                    disabled={deleteMutation.isPending}
+                                                    title="Delete ticket"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 );
