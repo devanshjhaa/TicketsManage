@@ -1,18 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Camera, Mail, Shield, ArrowLeft, Check, Loader2, AlertCircle, Star, Ticket, CheckCircle2, Clock } from "lucide-react";
+import { Mail, Shield, ArrowLeft, Loader2, Star, Ticket, CheckCircle2, Clock } from "lucide-react";
 import Link from "next/link";
 
 import { useMe } from "@/hooks/useMe";
 import { api } from "@/lib/axios";
-import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type AgentStats = {
   totalAssignedTickets: number;
@@ -25,12 +21,7 @@ type AgentStats = {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { data: user, isLoading } = useMe();
-  const [preview, setPreview] = useState<string | null>(null);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
 
   // Fetch agent stats if user is SUPPORT_AGENT
   const { data: agentStats } = useQuery<AgentStats>({
@@ -41,48 +32,6 @@ export default function ProfilePage() {
     },
     enabled: !!user && user.role === "SUPPORT_AGENT",
   });
-
-  const uploadMutation = useMutation({
-    mutationFn: async (file: File) => {
-      setUploadError(null);
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await api.post("/api/users/me/profile-picture", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["me"] });
-      setPreview(null);
-      toast({
-        title: "Success",
-        description: "Profile picture updated successfully!",
-      });
-    },
-    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
-      const message = error?.response?.data?.message || error?.message || "Failed to upload profile picture";
-      setUploadError(message);
-      setPreview(null);
-      toast({
-        title: "Upload Failed",
-        description: message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-      uploadMutation.mutate(file);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -96,12 +45,6 @@ export default function ProfilePage() {
     router.push("/login");
     return null;
   }
-
-  const profilePictureUrl = user.profilePictureUrl
-    ? `${API_URL}/api/users/${user.id}/profile-picture`
-    : null;
-
-  const displayImage = preview || profilePictureUrl;
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
@@ -129,7 +72,7 @@ export default function ProfilePage() {
             Profile
           </h1>
           <p className="text-zinc-600 dark:text-zinc-400 mb-12">
-            Manage your account settings and profile picture.
+            View your account settings.
           </p>
 
           {/* Profile Card */}
@@ -141,53 +84,13 @@ export default function ProfilePage() {
             <div className="px-8 pb-8">
               {/* Avatar */}
               <div className="relative -mt-16 mb-6">
-                <div className="relative inline-block">
-                  <div className="h-32 w-32 rounded-full border-4 border-white dark:border-zinc-900 overflow-hidden bg-zinc-200 dark:bg-zinc-800">
-                    {displayImage ? (
-                      <img
-                        src={displayImage}
-                        alt="Profile"
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center text-zinc-400 dark:text-zinc-600">
-                        <span className="text-4xl font-semibold">
-                          {user.email.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
+                <div className="h-32 w-32 rounded-full border-4 border-white dark:border-zinc-900 overflow-hidden bg-zinc-200 dark:bg-zinc-800">
+                  <div className="h-full w-full flex items-center justify-center text-zinc-400 dark:text-zinc-600">
+                    <span className="text-4xl font-semibold">
+                      {user.email.charAt(0).toUpperCase()}
+                    </span>
                   </div>
-
-                  {/* Upload Button */}
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadMutation.isPending}
-                    className="absolute bottom-0 right-0 h-10 w-10 rounded-full bg-zinc-900 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900 flex items-center justify-center hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors disabled:opacity-50"
-                  >
-                    {uploadMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : uploadMutation.isSuccess ? (
-                      <Check className="h-4 w-4" />
-                    ) : (
-                      <Camera className="h-4 w-4" />
-                    )}
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
                 </div>
-
-                {/* Error Message */}
-                {uploadError && (
-                  <div className="mt-3 flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
-                    <AlertCircle className="h-4 w-4" />
-                    {uploadError}
-                  </div>
-                )}
               </div>
 
               {/* Name */}
@@ -323,17 +226,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Tips Section */}
-          <div className="mt-8 p-6 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
-              Profile Tips
-            </h3>
-            <ul className="text-sm text-zinc-600 dark:text-zinc-400 space-y-1.5">
-              <li>• Click the camera icon to upload a new profile picture</li>
-              <li>• Supported formats: JPG, PNG, GIF (max 5MB)</li>
-              <li>• Your profile picture will be visible to others</li>
-            </ul>
-          </div>
+
         </motion.div>
       </div>
     </div>

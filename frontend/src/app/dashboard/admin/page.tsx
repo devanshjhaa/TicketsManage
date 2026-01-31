@@ -74,7 +74,7 @@ export default function AdminPage() {
                     <div className="mt-4">
                         <h2 className="text-xl font-semibold text-foreground">User Management</h2>
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Manage user accounts, update roles, upload profile photos, and control access.
+                            Manage user accounts, update roles, and control access.
                         </p>
                     </div>
                 </button>

@@ -18,8 +18,6 @@ import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
 // --- Types ---
 
 interface DashboardTicket {
@@ -373,17 +371,9 @@ export default function DashboardPage() {
                 Your Profile
               </h3>
               <div className="flex items-center gap-4">
-                {user?.profilePictureUrl ? (
-                  <img
-                    src={`${API_URL}/api/users/${user.id}/profile-picture`}
-                    alt="Profile"
-                    className="h-14 w-14 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800 text-zinc-600 dark:text-zinc-300 text-lg font-semibold">
-                    {user?.email?.charAt(0).toUpperCase()}
-                  </div>
-                )}
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800 text-zinc-600 dark:text-zinc-300 text-lg font-semibold">
+                  {user?.email?.charAt(0).toUpperCase()}
+                </div>
                 <div className="overflow-hidden">
                   <p className="truncate font-medium text-zinc-900 dark:text-zinc-100">
                     {user?.firstName || user?.email?.split("@")[0]}
@@ -397,7 +387,7 @@ export default function DashboardPage() {
                 href="/dashboard/profile"
                 className="mt-4 block w-full text-center py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
               >
-                Edit Profile
+                View Profile
               </Link>
             </div>
 

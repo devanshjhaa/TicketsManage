@@ -20,8 +20,6 @@ import { useMe } from "@/hooks/useMe";
 import { api } from "@/lib/axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
 const NAVIGATION = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'My Tickets', href: '/dashboard/tickets', icon: Ticket, roles: ['USER'] },
@@ -138,17 +136,9 @@ export default function DashboardLayout({
                                 href="/dashboard/profile"
                                 className="mb-4 flex items-center gap-3 rounded-lg bg-zinc-100/50 p-3 dark:bg-zinc-900/50 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-colors"
                             >
-                                {user.profilePictureUrl ? (
-                                    <img
-                                        src={`${API_URL}/api/users/${user.id}/profile-picture`}
-                                        alt="Profile"
-                                        className="h-10 w-10 rounded-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                        <User className="h-5 w-5" />
-                                    </div>
-                                )}
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                    <User className="h-5 w-5" />
+                                </div>
                                 <div className="flex-1 overflow-hidden">
                                     <p className="truncate text-sm font-medium text-foreground">
                                         {user.email.split('@')[0]}

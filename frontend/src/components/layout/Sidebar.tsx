@@ -9,8 +9,6 @@ import { useMe } from "@/hooks/useMe";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -43,10 +41,6 @@ export default function Sidebar() {
   const allowedItems = NAV_ITEMS.filter((item) =>
     item.roles.includes(user.role)
   );
-
-  const profilePictureUrl = user.profilePictureUrl 
-    ? `${API_URL}/api/users/${user.id}/profile-picture` 
-    : null;
 
   return (
     <aside className="flex flex-col w-64 border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-6">
@@ -92,17 +86,9 @@ export default function Sidebar() {
               : "hover:bg-zinc-100 dark:hover:bg-zinc-900"
           )}
         >
-          {profilePictureUrl ? (
-            <img
-              src={profilePictureUrl}
-              alt="Profile"
-              className="h-9 w-9 rounded-full object-cover border border-zinc-200 dark:border-zinc-700"
-            />
-          ) : (
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-              <User className="h-4 w-4" />
-            </div>
-          )}
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+            <User className="h-4 w-4" />
+          </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
               {user.firstName || user.email.split("@")[0]}
