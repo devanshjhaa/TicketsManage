@@ -104,14 +104,14 @@ and can be reopened when needed.
 - update ticket status,
 - assign or reassign tickets,
 - add internal notes.
-- Code-AGENT_SECRET_AWS_2026
+- Code for signUP - AGENT_SECRET_AWS_2026
 
 **Admins can:**
 
 - manage users,
 - view system-wide tickets,
 - and access analytics dashboards.
-- Code-ADMIN_SECRET_AWS_2026
+- Code for SignUP - ADMIN_SECRET_AWS_2026
 
 ### Attachments
 
