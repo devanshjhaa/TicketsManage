@@ -111,35 +111,28 @@ public class TicketNotificationListener {
         }
     }
 
-    // STATUS CHANGED - Notify ticket owner
+    // STATUS CHANGED - Notify ticket owner (uses event data directly to avoid race condition)
     @Async
     @EventListener
-    @Transactional(readOnly = true)
     public void onStatusChanged(TicketStatusChangedEvent event) {
         try {
-            TicketEntity ticket = ticketRepository.findById(event.ticketId()).orElse(null);
-            if (ticket == null) {
-                log.warn("Ticket not found for status changed event: {}", event.ticketId());
-                return;
-            }
-
-            String statusMessage = getStatusMessage(ticket.getStatus().toString());
-            String emoji = getStatusEmoji(ticket.getStatus().toString());
-            String ticketUrl = frontendUrl + "/dashboard/tickets/" + ticket.getId();
+            String statusMessage = getStatusMessage(event.newStatus());
+            String emoji = getStatusEmoji(event.newStatus());
+            String ticketUrl = frontendUrl + "/dashboard/tickets/" + event.ticketId();
             
             String html = buildEmailTemplate(
                 "Ticket Status Updated",
                 statusMessage,
-                ticket.getTitle(),
-                ticket.getId().toString().substring(0, 8),
-                ticket.getStatus().toString(),
-                ticket.getPriority().toString(),
+                event.ticketTitle(),
+                event.ticketId().toString().substring(0, 8),
+                event.newStatus(),
+                event.priority(),
                 ticketUrl
             );
 
             emailService.send(
-                ticket.getOwner().getEmail(),
-                emoji + " Ticket " + ticket.getStatus() + ": " + ticket.getTitle(),
+                event.ownerEmail(),
+                emoji + " Ticket " + event.newStatus() + ": " + event.ticketTitle(),
                 html
             );
         } catch (Exception e) {

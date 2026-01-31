@@ -176,7 +176,13 @@ public class TicketService {
                                 "STATUS_CHANGED",
                                 "Changed to " + request.status());
 
-                eventPublisher.publishEvent(new TicketStatusChangedEvent(ticket.getId()));
+                eventPublisher.publishEvent(new TicketStatusChangedEvent(
+                                ticket.getId(),
+                                request.status().toString(),
+                                ticket.getTitle(),
+                                ticket.getOwner().getEmail(),
+                                ticket.getPriority().toString()
+                ));
 
                 return toResponse(ticket);
         }
