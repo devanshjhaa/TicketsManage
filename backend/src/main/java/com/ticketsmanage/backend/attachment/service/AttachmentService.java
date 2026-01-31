@@ -45,7 +45,6 @@ public class AttachmentService {
 
         private static final Path BASE_DIR = Paths.get("uploads/tickets");
 
-        // UPLOAD
         @Transactional
         public UploadAttachmentResponse upload(
                         UUID ticketId,
@@ -101,7 +100,6 @@ public class AttachmentService {
                 }
         }
 
-        // LIST
         @Transactional(readOnly = true)
         public List<AttachmentResponse> getAttachments(
                         UUID ticketId) {
@@ -120,7 +118,6 @@ public class AttachmentService {
                                 .toList();
         }
 
-        // DOWNLOAD
         @Transactional(readOnly = true)
         public ResponseEntity<Resource> download(
                         UUID ticketId,
@@ -178,7 +175,6 @@ public class AttachmentService {
                 }
         }
 
-        // SOFT DELETE
         @Transactional
         public void softDelete(
                         UUID ticketId,
@@ -215,7 +211,6 @@ public class AttachmentService {
                 // }
         }
 
-        // SECURITY
         private UserEntity getCurrentUser() {
 
                 String email = SecurityUtils.getCurrentUsername();
@@ -247,7 +242,6 @@ public class AttachmentService {
                 }
         }
 
-        // MAPPING
         private AttachmentResponse toResponse(
                         AttachmentEntity entity) {
 

@@ -20,7 +20,6 @@ public class AdminUserController {
 
     private final AdminUserService adminUserService;
 
-    // UPDATE ROLE
     @PutMapping("/{id}/role")
     public void updateRole(
             @PathVariable UUID id,
@@ -28,7 +27,6 @@ public class AdminUserController {
         adminUserService.updateUserRole(id, request);
     }
 
-    // ENABLE / DISABLE
     @PutMapping("/{id}/status")
     public void updateStatus(
             @PathVariable UUID id,
@@ -36,7 +34,6 @@ public class AdminUserController {
         adminUserService.updateUserStatus(id, request);
     }
 
-    // UPLOAD PHOTO
     @PostMapping(value = "/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public void uploadPhoto(
             @PathVariable UUID id,

@@ -14,5 +14,3 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
-
-console.log("API BASE:", process.env.NEXT_PUBLIC_API_URL);

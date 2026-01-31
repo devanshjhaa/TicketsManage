@@ -32,7 +32,6 @@ public class CommentService {
     private final TicketActivityService ticketActivityService;
     private final ApplicationEventPublisher publisher;
 
-    // ADD COMMENT
     @Transactional
     public CommentResponse addComment(
             UUID ticketId,
@@ -58,7 +57,6 @@ public class CommentService {
 
         TicketCommentEntity saved = commentRepository.save(comment);
 
-        //  Activity log
         ticketActivityService.log(
                 ticket,
                 currentUser,
@@ -73,11 +71,9 @@ public class CommentService {
                 )
         );
 
-
         return toResponse(saved);
     }
 
-    // GET COMMENTS
     @Transactional(readOnly = true)
     public List<CommentResponse> getCommentsForTicket(UUID ticketId) {
 
@@ -99,7 +95,6 @@ public class CommentService {
                 .toList();
     }
 
-    // SECURITY HELPERS
     private UserEntity getCurrentUser() {
 
         String email = SecurityUtils.getCurrentUsername();
@@ -137,7 +132,6 @@ public class CommentService {
         }
     }
 
-    // MAPPING
     private CommentResponse toResponse(
             TicketCommentEntity entity
     ) {

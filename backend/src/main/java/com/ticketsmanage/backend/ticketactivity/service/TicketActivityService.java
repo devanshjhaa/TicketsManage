@@ -25,7 +25,6 @@ public class TicketActivityService {
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
 
-    // LOG ACTIVITY
     @Transactional
     public void log(
             TicketEntity ticket,
@@ -44,7 +43,6 @@ public class TicketActivityService {
         activityRepository.save(activity);
     }
 
-    // GET TIMELINE
     @Transactional(readOnly = true)
     public List<TicketActivityResponse> getTimeline(
             UUID ticketId
@@ -82,7 +80,6 @@ public class TicketActivityService {
                 .toList();
     }
 
-    // HELPERS
     private UserEntity getCurrentUser() {
 
         return userRepository

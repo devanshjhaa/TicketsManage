@@ -25,10 +25,10 @@ export default function LoginPage() {
       setLoading(true);
       const response = await api.post("/api/auth/login", { email, password });
 
-      const token = response.data.getAccessToken;
+      const token = response.data.accessToken;
       if (token) {
         localStorage.setItem("accessToken", token);
-        document.cookie = `accessToken=${token}; path=/; max-age=${15 * 60}; SameSite=Lax`;
+        document.cookie = `accessToken=${token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax; Secure`;
       }
 
       router.replace("/dashboard");

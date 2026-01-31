@@ -11,9 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -23,7 +21,6 @@ public class TicketController {
 
     private final TicketService ticketService;
 
-    // GET MY TICKETS
     @GetMapping("/my")
     public Page<TicketResponse> getMyTickets(
             @RequestParam(required = false) String q,
@@ -31,20 +28,17 @@ public class TicketController {
         return ticketService.getMyTickets(q, pageable);
     }
 
-    // CREATE TICKET
     @PostMapping
     public TicketResponse createTicket(
             @RequestBody @Valid CreateTicketRequest request) {
         return ticketService.createTicket(request);
     }
 
-    // GET ALL TICKETS (ROLE AWARE)
     @GetMapping
     public Page<TicketResponse> getAllTickets(Pageable pageable) {
         return ticketService.getAllTickets(pageable);
     }
 
-    // SEARCH / FILTER / PAGINATION
     @GetMapping("/search")
     public Page<TicketResponse> searchTickets(
             @RequestParam(required = false) TicketStatus status,
@@ -62,14 +56,12 @@ public class TicketController {
                 pageable);
     }
 
-    // GET TICKET BY ID
     @GetMapping("/{id}")
     public TicketResponse getTicketById(
             @PathVariable UUID id) {
         return ticketService.getTicketById(id);
     }
 
-    // UPDATE STATUS
     @PutMapping("/{id}/status")
     public TicketResponse updateStatus(
             @PathVariable UUID id,
@@ -77,7 +69,6 @@ public class TicketController {
         return ticketService.updateStatus(id, request);
     }
 
-    // ASSIGN TICKET
     @PostMapping("/{id}/assign")
     public TicketResponse assignTicket(
             @PathVariable UUID id,
@@ -85,7 +76,6 @@ public class TicketController {
         return ticketService.assignTicket(id, request);
     }
 
-    // RATE TICKET
     @PostMapping("/{id}/rating")
     public TicketResponse rateTicket(
             @PathVariable UUID id,
@@ -93,22 +83,21 @@ public class TicketController {
         return ticketService.rateTicket(id, request);
     }
 
-    // SOFT DELETE
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteTicket(
             @PathVariable UUID id) {
         ticketService.softDeleteTicket(id);
     }
 
-    // RESTORE (ADMIN)
     @PostMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
     public void restoreTicket(
             @PathVariable UUID id) {
         ticketService.restoreTicket(id);
     }
 
-    // ADMIN DASHBOARD
     @GetMapping("/admin/dashboard")
     @PreAuthorize("hasRole('ADMIN')")
     public AdminDashboardResponse getDashboard() {

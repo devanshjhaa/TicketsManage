@@ -23,38 +23,38 @@ import java.net.MalformedURLException;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserService UserService;
+    private final UserService userService;
 
     @GetMapping
     public List<UserResponse> getAllUsers() {
-        return UserService.getAllUsers();
+        return userService.getAllUsers();
     }
 
     @GetMapping("/{id}")
     public UserResponse getUserById(@PathVariable UUID id) {
-        return UserService.getUserById(id);
+        return userService.getUserById(id);
     }
 
     @GetMapping("/me")
     public UserResponse getMe(org.springframework.security.core.Authentication authentication) {
-        return UserService.getCurrentUser(authentication);
+        return userService.getCurrentUser(authentication);
     }
 
     @GetMapping("/me/stats")
     public AgentStatsResponse getAgentStats(org.springframework.security.core.Authentication authentication) {
-        return UserService.getAgentStats(authentication);
+        return userService.getAgentStats(authentication);
     }
 
     @PostMapping("/me/profile-picture")
     public UserResponse uploadProfilePicture(
             org.springframework.security.core.Authentication authentication,
             @RequestParam("file") MultipartFile file) throws IOException {
-        return UserService.updateProfilePicture(authentication, file);
+        return userService.updateProfilePicture(authentication, file);
     }
 
     @GetMapping("/{id}/profile-picture")
     public ResponseEntity<Resource> getProfilePicture(@PathVariable UUID id) {
-        UserResponse user = UserService.getUserById(id);
+        UserResponse user = userService.getUserById(id);
         if (user.profilePictureUrl() == null) {
             return ResponseEntity.notFound().build();
         }

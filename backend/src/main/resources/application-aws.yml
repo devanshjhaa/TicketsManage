@@ -48,20 +48,19 @@ spring:
 # JWT Configuration
 security:
   jwt:
-    secret: ${JWT_SECRET:my-super-secret-jwt-key-that-is-at-least-256-bits-long-for-hs256-aws-deployment}
-    expiration: 86400000  # 24 hours in milliseconds
+    secret: ${JWT_SECRET}
+    expiration: 86400000
 
 # Resend Email Service Configuration
 resend:
   api-key: ${RESEND_API_KEY}
   from: ${RESEND_FROM}
 
-# Secret Codes for Role-Based Registration
 app:
   secret-code:
-    admin: ${ADMIN_SECRET_CODE:ADMIN_SECRET_2026}
-    agent: ${AGENT_SECRET_CODE:AGENT_SECRET_2026}
-  frontend-url: ${FRONTEND_URL:http://localhost:3000}
+    admin: ${ADMIN_SECRET_CODE}
+    agent: ${AGENT_SECRET_CODE}
+  frontend-url: ${FRONTEND_URL:https://ticketsmanage.dev}
 
 # AWS S3 Configuration
 aws:

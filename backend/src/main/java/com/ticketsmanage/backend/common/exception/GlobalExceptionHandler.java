@@ -1,6 +1,7 @@
 package com.ticketsmanage.backend.common.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -12,10 +13,10 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // VALIDATION ERRORS
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleValidation(
             MethodArgumentNotValidException ex,
@@ -41,7 +42,6 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // ACCESS DENIED
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<?> handleAccessDenied(
             AccessDeniedException ex,
@@ -58,7 +58,6 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    // ILLEGAL ARGUMENT
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleIllegalArgument(
             IllegalArgumentException ex,
@@ -75,14 +74,13 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    // FALLBACK
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleAny(
             Exception ex,
             HttpServletRequest request
     ) {
 
-        ex.printStackTrace();
+        log.error("Unhandled exception: {}", ex.getMessage(), ex);
 
         return ResponseEntity.status(500)
                 .body(new ApiError(

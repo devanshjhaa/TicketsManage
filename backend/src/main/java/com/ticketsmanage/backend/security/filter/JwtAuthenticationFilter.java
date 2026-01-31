@@ -33,85 +33,61 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-protected void doFilterInternal(
-        HttpServletRequest request,
-        HttpServletResponse response,
-        FilterChain filterChain
-) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
-    System.out.println(">>> JWT FILTER PATH = " + request.getServletPath());
+        String jwt = null;
 
-    String jwt = null;
+        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-    // 1️⃣ Try Authorization header first
-    final String authHeader =
-            request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+        }
 
-    System.out.println(">>> AUTH HEADER = " + authHeader);
-
-    if (authHeader != null && authHeader.startsWith("Bearer ")) {
-        jwt = authHeader.substring(7);
-    }
-
-    // 2️⃣ If no header token, try cookie
-    if (jwt == null && request.getCookies() != null) {
-        System.out.println(">>> COOKIES FOUND: " + request.getCookies().length);
-        for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
-            System.out.println(">>> COOKIE: " + cookie.getName() + " = " + (cookie.getValue() != null ? cookie.getValue().substring(0, Math.min(20, cookie.getValue().length())) + "..." : "null"));
-            if ("accessToken".equals(cookie.getName())) {
-                jwt = cookie.getValue();
-                break;
+        if (jwt == null && request.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                if ("accessToken".equals(cookie.getName())) {
+                    jwt = cookie.getValue();
+                    break;
+                }
             }
         }
-    } else if (request.getCookies() == null) {
-        System.out.println(">>> NO COOKIES IN REQUEST");
-    }
 
-    // 3️⃣ If still no token, continue filter chain
-    if (jwt == null) {
-        System.out.println(">>> NO JWT FOUND — SKIPPING");
+        if (jwt == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String username = jwtService.extractSubject(jwt);
+        String role = jwtService.extractRole(jwt);
+
+        if (username != null &&
+                SecurityContextHolder.getContext().getAuthentication() == null &&
+                jwtService.isTokenValid(jwt)) {
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+            var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            authorities
+                    );
+
+            authToken.setDetails(
+                    new WebAuthenticationDetailsSource().buildDetails(request)
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+        }
+
         filterChain.doFilter(request, response);
-        return;
     }
-
-    String username = jwtService.extractSubject(jwt);
-    String role = jwtService.extractRole(jwt);
-
-    System.out.println(">>> JWT SUBJECT = " + username);
-    System.out.println(">>> JWT ROLE = " + role);
-
-    if (username != null &&
-            SecurityContextHolder.getContext()
-                    .getAuthentication() == null &&
-            jwtService.isTokenValid(jwt)) {
-
-        UserDetails userDetails =
-                userDetailsService.loadUserByUsername(username);
-
-        var authorities = List.of(
-                new SimpleGrantedAuthority("ROLE_" + role)
-        );
-
-        System.out.println(">>> SETTING AUTH = " + authorities);
-
-        UsernamePasswordAuthenticationToken authToken =
-                new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        authorities
-                );
-
-        authToken.setDetails(
-                new WebAuthenticationDetailsSource()
-                        .buildDetails(request)
-        );
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(authToken);
-    }
-
-    filterChain.doFilter(request, response);
-}
 
 
     @Override

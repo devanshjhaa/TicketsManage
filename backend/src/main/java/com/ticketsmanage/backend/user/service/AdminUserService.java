@@ -6,7 +6,6 @@ import com.ticketsmanage.backend.user.entity.UserEntity;
 import com.ticketsmanage.backend.user.entity.UserRole;
 import com.ticketsmanage.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +22,6 @@ public class AdminUserService {
 
         private final UserRepository userRepository;
 
-        // UPDATE ROLE
         @Transactional
         public void updateUserRole(
                         UUID userId,
@@ -52,7 +50,6 @@ public class AdminUserService {
                 userRepository.save(user);
         }
 
-        // ENABLE / DISABLE USER
         @Transactional
         public void updateUserStatus(
                         UUID userId,
@@ -82,7 +79,6 @@ public class AdminUserService {
                 userRepository.save(user);
         }
 
-        // UPLOAD PHOTO
         @Transactional
         public void updateUserPhoto(UUID userId, MultipartFile file) {
                 UserEntity user = userRepository.findById(userId)

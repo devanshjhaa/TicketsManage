@@ -15,6 +15,7 @@ import com.ticketsmanage.backend.user.entity.UserEntity;
 import com.ticketsmanage.backend.user.entity.UserRole;
 import com.ticketsmanage.backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TicketService {
@@ -285,7 +287,7 @@ public class TicketService {
                                         null,
                                         Map.of());
                 } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error("Dashboard error", e);
                         throw new org.springframework.web.server.ResponseStatusException(
                                         org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
                                         "Dashboard Error: " + e.toString());
