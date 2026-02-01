@@ -22,13 +22,6 @@ public class S3Service {
     @Value("${aws.s3.bucket-name}")
     private String bucketName;
 
-    /**
-     * Upload a file to S3
-     * 
-     * @param file MultipartFile to upload
-     * @param key  S3 object key (path)
-     * @return S3 object key
-     */
     public String uploadFile(MultipartFile file, String key) {
         try {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
@@ -54,12 +47,6 @@ public class S3Service {
         }
     }
 
-    /**
-     * Download a file from S3
-     * 
-     * @param key S3 object key
-     * @return InputStream of the file
-     */
     public InputStream downloadFile(String key) {
         try {
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
@@ -78,11 +65,6 @@ public class S3Service {
         }
     }
 
-    /**
-     * Delete a file from S3
-     * 
-     * @param key S3 object key
-     */
     public void deleteFile(String key) {
         try {
             DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
@@ -99,12 +81,6 @@ public class S3Service {
         }
     }
 
-    /**
-     * Check if a file exists in S3
-     * 
-     * @param key S3 object key
-     * @return true if file exists, false otherwise
-     */
     public boolean fileExists(String key) {
         try {
             HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
@@ -123,12 +99,6 @@ public class S3Service {
         }
     }
 
-    /**
-     * Get the content type of a file in S3
-     * 
-     * @param key S3 object key
-     * @return Content type
-     */
     public String getContentType(String key) {
         try {
             HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()

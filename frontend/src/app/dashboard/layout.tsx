@@ -67,7 +67,6 @@ export default function DashboardLayout({
 
     return (
         <div className="flex min-h-screen bg-zinc-50 dark:bg-zinc-950">
-            {/* Mobile Menu Overlay */}
             {isMobileMenuOpen && (
                 <div
                     className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
@@ -75,7 +74,6 @@ export default function DashboardLayout({
                 />
             )}
 
-            {/* Sidebar */}
             <aside
                 className={cn(
                     "fixed inset-y-0 left-0 z-50 w-64 border-r border-zinc-200 bg-white/80 backdrop-blur-xl transition-transform dark:border-zinc-800 dark:bg-zinc-950/80 lg:translate-x-0",
@@ -83,7 +81,6 @@ export default function DashboardLayout({
                 )}
             >
                 <div className="flex h-full flex-col">
-                    {/* Header */}
                     <div className="flex h-16 items-center border-b border-zinc-200 px-6 dark:border-zinc-800">
                         <div className="flex items-center gap-2">
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white">
@@ -129,7 +126,6 @@ export default function DashboardLayout({
                         })}
                     </nav>
 
-                    {/* User Info & Footer */}
                     <div className="border-t border-zinc-200 p-4 dark:border-zinc-800">
                         {user && (
                             <Link
@@ -160,9 +156,7 @@ export default function DashboardLayout({
                 </div>
             </aside>
 
-            {/* Main Content */}
             <div className="flex flex-1 flex-col lg:pl-64">
-                {/* Mobile Header */}
                 <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-zinc-200 bg-white/80 px-4 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80 lg:hidden">
                     <div className="flex items-center">
                         <button

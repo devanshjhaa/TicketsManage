@@ -11,7 +11,6 @@ export default function AdminPage() {
     const router = useRouter();
     const { data: user, isLoading } = useMe();
 
-    // Redirect non-admins
     useEffect(() => {
         if (user && user.role !== "ADMIN") {
             router.replace("/dashboard");
@@ -28,7 +27,6 @@ export default function AdminPage() {
 
     return (
         <div className="mx-auto max-w-4xl px-4 py-6 space-y-8">
-            {/* Header */}
             <div className="flex items-center gap-4">
                 <Button variant="outline" size="icon" onClick={() => router.push("/dashboard")}>
                     <ArrowLeft className="h-4 w-4" />
@@ -39,9 +37,7 @@ export default function AdminPage() {
                 </div>
             </div>
 
-            {/* Admin Cards */}
             <div className="grid gap-6 md:grid-cols-2">
-                {/* All Tickets Card */}
                 <button
                     onClick={() => router.push("/dashboard/admin/tickets")}
                     className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white p-6 text-left shadow-sm transition-all hover:shadow-md hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700"
@@ -60,7 +56,6 @@ export default function AdminPage() {
                     </div>
                 </button>
 
-                {/* User Management Card */}
                 <button
                     onClick={() => router.push("/dashboard/admin/users")}
                     className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white p-6 text-left shadow-sm transition-all hover:shadow-md hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700"

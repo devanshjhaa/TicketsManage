@@ -44,7 +44,6 @@ export default function Sidebar() {
 
   return (
     <aside className="flex flex-col w-64 border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-6">
-      {/* Logo */}
       <Link href="/dashboard" className="flex items-center gap-3 mb-8">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-900 dark:bg-zinc-100">
           <Ticket className="h-5 w-5 text-zinc-100 dark:text-zinc-900" />
@@ -52,7 +51,6 @@ export default function Sidebar() {
         <span className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">TicketsManage</span>
       </Link>
 
-      {/* Navigation */}
       <nav className="space-y-1 flex-1">
         {allowedItems.map((item) => {
           const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
@@ -75,7 +73,6 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Profile Section */}
       <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4 mt-4 space-y-2">
         <Link
           href="/dashboard/profile"

@@ -26,7 +26,6 @@ const marqueeItems = ["EFFICIENT", "SCALABLE", "INTUITIVE", "RELIABLE", "FAST", 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 selection:bg-primary selection:text-primary-foreground">
-      {/* Navigation */}
       <nav className="fixed top-0 z-50 w-full bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-md">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-3">
@@ -51,11 +50,9 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <section className="relative min-h-screen flex flex-col justify-center pt-20">
         <div className="mx-auto max-w-7xl px-6 lg:px-8 py-20">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left - Large Typography */}
             <div>
               <motion.div
                 initial={{ opacity: 0, y: 40 }}
@@ -114,7 +111,6 @@ export default function LandingPage() {
               </motion.div>
             </div>
 
-            {/* Right - Feature Cards */}
             <motion.div
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
@@ -140,7 +136,6 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Scroll Indicator */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -157,7 +152,6 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Marquee Section */}
       <section className="py-8 border-y border-zinc-200 dark:border-zinc-800 overflow-hidden">
         <div className="flex">
           <motion.div
@@ -191,7 +185,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* About Section */}
       <section id="about" className="py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-start">
@@ -240,7 +233,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section */}
       <section id="features" className="py-32 bg-zinc-100 dark:bg-zinc-900/50">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <motion.span
@@ -300,7 +292,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="text-center">
@@ -339,7 +330,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-zinc-200 dark:border-zinc-800 py-16">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-8">

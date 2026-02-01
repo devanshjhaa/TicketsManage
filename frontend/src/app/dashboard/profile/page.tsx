@@ -48,7 +48,6 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      {/* Header */}
       <div className="border-b border-zinc-200 dark:border-zinc-800">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <Link
@@ -67,7 +66,6 @@ export default function ProfilePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {/* Title */}
           <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mb-2">
             Profile
           </h1>
@@ -75,14 +73,10 @@ export default function ProfilePage() {
             View your account settings.
           </p>
 
-          {/* Profile Card */}
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-            {/* Banner */}
             <div className="h-32 bg-gradient-to-r from-zinc-200 via-zinc-100 to-zinc-200 dark:from-zinc-800 dark:via-zinc-700 dark:to-zinc-800" />
 
-            {/* Profile Content */}
             <div className="px-8 pb-8">
-              {/* Avatar */}
               <div className="relative -mt-16 mb-6">
                 <div className="h-32 w-32 rounded-full border-4 border-white dark:border-zinc-900 overflow-hidden bg-zinc-200 dark:bg-zinc-800">
                   <div className="h-full w-full flex items-center justify-center text-zinc-400 dark:text-zinc-600">
@@ -93,16 +87,13 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Name */}
               <h2 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
                 {user.firstName && user.lastName
                   ? `${user.firstName} ${user.lastName}`
                   : user.email.split("@")[0]}
               </h2>
 
-              {/* Info Cards */}
               <div className="grid gap-4 mt-8">
-                {/* Email */}
                 <div className="flex items-center gap-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
                   <div className="h-10 w-10 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center">
                     <Mail className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
@@ -117,7 +108,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Role */}
                 <div className="flex items-center gap-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
                   <div className="h-10 w-10 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center">
                     <Shield className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
@@ -133,14 +123,12 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Agent Stats Section */}
               {user.role === "SUPPORT_AGENT" && agentStats && (
                 <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-700">
                   <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
                     Your Performance
                   </h3>
                   
-                  {/* Rating Card */}
                   <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200 dark:border-yellow-800">
                     <div className="flex items-center justify-between">
                       <div>
@@ -180,7 +168,6 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Ticket Stats */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 text-center">
                       <Ticket className="h-5 w-5 mx-auto mb-1 text-zinc-500" />
@@ -214,7 +201,6 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {/* Status */}
               <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-700">
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-emerald-500" />

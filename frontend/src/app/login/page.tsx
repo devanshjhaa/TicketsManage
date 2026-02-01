@@ -49,10 +49,8 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Left Panel - Login Form */}
       <div className="flex w-full flex-col justify-center px-8 py-12 lg:w-1/2 lg:px-16 xl:px-24">
         <div className="mx-auto w-full max-w-md">
-          {/* Logo */}
           <Link href="/" className="inline-flex items-center gap-2 mb-8">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Ticket className="h-5 w-5" />
@@ -60,7 +58,6 @@ export default function LoginPage() {
             <span className="text-xl font-bold tracking-tight text-foreground">TicketsManage</span>
           </Link>
 
-          {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold tracking-tight text-foreground">
               Log in to your account
@@ -73,7 +70,6 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Social Login Buttons */}
           <div className="space-y-3">
             <Button
               variant="outline"
@@ -102,7 +98,6 @@ export default function LoginPage() {
             </Button>
           </div>
 
-          {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-zinc-200 dark:border-zinc-800" />
@@ -114,7 +109,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Email/Password Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-foreground">
@@ -157,7 +151,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right Panel - Feature Showcase */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary to-primary/80 p-12 text-primary-foreground">
         <div className="flex flex-col justify-center max-w-lg mx-auto">
           <motion.div
@@ -173,7 +166,7 @@ export default function LoginPage() {
               exceptional customer support with our powerful ticketing system.
             </p>
 
-            {/* Feature List */}
+
             <div className="space-y-6">
               {[
                 {

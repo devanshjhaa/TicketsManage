@@ -18,8 +18,6 @@ import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-// --- Types ---
-
 interface DashboardTicket {
   id: string;
   title: string;
@@ -29,14 +27,11 @@ interface DashboardTicket {
   owner: { id: string; email: string };
 }
 
-// --- Status Config ---
 const STATUS_CONFIG: Record<string, { color: string; bg: string }> = {
   OPEN: { color: "text-blue-600", bg: "bg-blue-100 dark:bg-blue-900/30" },
   IN_PROGRESS: { color: "text-amber-600", bg: "bg-amber-100 dark:bg-amber-900/30" },
   RESOLVED: { color: "text-emerald-600", bg: "bg-emerald-100 dark:bg-emerald-900/30" },
 };
-
-// --- Components ---
 
 function StatCard({
   title,
@@ -120,8 +115,6 @@ function ActivityItem({ ticket, index }: { ticket: DashboardTicket; index: numbe
   );
 }
 
-// --- Fetchers ---
-
 import { AnalyticsCharts, AdminDashboardData } from "@/components/dashboard/AnalyticsCharts";
 
 const fetchUserStats = async () => {
@@ -177,7 +170,6 @@ export default function DashboardPage() {
   const isAdmin = user?.role === "ADMIN";
   const isAgent = user?.role === "SUPPORT_AGENT";
 
-  // User Stats (regular users)
   const { data: userStats, isLoading: userStatsLoading } = useQuery({
     queryKey: ["dashboard-stats-user"],
     queryFn: fetchUserStats,
@@ -185,7 +177,6 @@ export default function DashboardPage() {
     refetchInterval: 30000,
   });
 
-  // Agent Stats
   const { data: agentStats, isLoading: agentStatsLoading } = useQuery({
     queryKey: ["dashboard-stats-agent"],
     queryFn: fetchAgentStats,
@@ -193,7 +184,6 @@ export default function DashboardPage() {
     refetchInterval: 30000,
   });
 
-  // Admin Stats
   const { data: adminStats, isLoading: adminStatsLoading } = useQuery({
     queryKey: ["admin-dashboard"],
     queryFn: fetchAdminStats,
@@ -201,7 +191,6 @@ export default function DashboardPage() {
     refetchInterval: 30000,
   });
 
-  // Calculate stats based on role
   let stats;
   let statsLoading;
   if (isAdmin) {
@@ -219,7 +208,6 @@ export default function DashboardPage() {
     statsLoading = userStatsLoading;
   }
 
-  // Recent activity based on role
   const { data: recentTickets, isLoading: activityLoading } = useQuery({
     queryKey: ["recent-activity", user?.role],
     queryFn: () => {
@@ -230,7 +218,6 @@ export default function DashboardPage() {
     enabled: !!user,
   });
 
-  // Determine the "View all" link based on role
   const viewAllLink = isAdmin 
     ? "/dashboard/admin/tickets" 
     : isAgent 
@@ -246,7 +233,6 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <div className="mx-auto max-w-7xl px-6 py-8">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -264,7 +250,6 @@ export default function DashboardPage() {
           </p>
         </motion.div>
 
-        {/* Stats Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-8">
           <StatCard
             title="Total Tickets"
@@ -292,7 +277,6 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Admin Analytics */}
         {isAdmin && adminStats && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -307,9 +291,7 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-        {/* Content Grid */}
         <div className="grid gap-6 lg:grid-cols-3">
-          {/* Recent Activity */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -358,14 +340,12 @@ export default function DashboardPage() {
             </div>
           </motion.div>
 
-          {/* Quick Actions */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
             className="space-y-6"
           >
-            {/* User Profile Card */}
             <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
               <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wide mb-4">
                 Your Profile
@@ -391,7 +371,6 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            {/* Quick Actions Card */}
             {!isAdmin && !isAgent && (
               <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
                 <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wide mb-4">

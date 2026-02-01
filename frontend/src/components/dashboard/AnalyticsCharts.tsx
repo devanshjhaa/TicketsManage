@@ -28,7 +28,6 @@ export type AdminDashboardData = {
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
 export function AnalyticsCharts({ data }: { data: AdminDashboardData }) {
-    // Transform Map to Array for Recharts
     const statusData = Object.entries(data.statusCounts)
         .map(([name, value]) => ({
             name,
@@ -42,7 +41,6 @@ export function AnalyticsCharts({ data }: { data: AdminDashboardData }) {
 
     return (
         <div className="grid gap-6 md:grid-cols-2">
-            {/* Status Distribution */}
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
@@ -67,7 +65,6 @@ export function AnalyticsCharts({ data }: { data: AdminDashboardData }) {
                 </CardContent>
             </Card>
 
-            {/* Priority Distribution */}
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">

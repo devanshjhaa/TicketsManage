@@ -37,7 +37,6 @@ export default function NewTicketPage() {
     const queryClient = useQueryClient();
     const { data: user, isLoading: userLoading } = useMe();
 
-    // Redirect ADMIN users away from New Ticket page
     useEffect(() => {
         if (user && user.role === "ADMIN") {
             router.replace("/dashboard");

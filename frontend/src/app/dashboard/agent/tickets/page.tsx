@@ -70,7 +70,6 @@ export default function AssignedTicketsPage() {
     const [page, setPage] = React.useState(0);
     const pageSize = 20;
 
-    // Redirect non-agents
     React.useEffect(() => {
         if (user && user.role !== "SUPPORT_AGENT") {
             router.replace("/dashboard");
@@ -95,7 +94,6 @@ export default function AssignedTicketsPage() {
         enabled: !!user && user.role === "SUPPORT_AGENT",
     });
 
-    // Reset page when filters change
     React.useEffect(() => {
         setPage(0);
     }, [search, statusFilter, priorityFilter]);
@@ -129,7 +127,6 @@ export default function AssignedTicketsPage() {
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
             <div className="mx-auto max-w-6xl px-6 py-8 space-y-8">
-                {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -158,7 +155,6 @@ export default function AssignedTicketsPage() {
                     </button>
                 </motion.div>
 
-                {/* Search & Filters */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -192,7 +188,6 @@ export default function AssignedTicketsPage() {
                         </Button>
                     </div>
 
-                    {/* Filter Dropdowns */}
                     {showFilters && (
                         <motion.div
                             initial={{ opacity: 0, height: 0 }}
@@ -237,7 +232,6 @@ export default function AssignedTicketsPage() {
                     )}
                 </motion.div>
 
-                {/* Tickets List */}
                 {isLoading ? (
                     <div className="space-y-3">
                         {[1, 2, 3, 4, 5].map(i => (
@@ -333,7 +327,6 @@ export default function AssignedTicketsPage() {
                                                 {ticket.priority}
                                             </span>
 
-                                            {/* Status Dropdown */}
                                             <Select
                                                 defaultValue={ticket.status}
                                                 onValueChange={(val) => {
@@ -383,7 +376,6 @@ export default function AssignedTicketsPage() {
                     </motion.div>
                 )}
 
-                {/* Pagination */}
                 {totalPages > 1 && (
                     <motion.div
                         initial={{ opacity: 0 }}

@@ -103,7 +103,7 @@ export default function MyTicketsPage() {
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["my-tickets", debouncedSearch, statusFilter, priorityFilter, page],
     queryFn: () => fetchMyTickets(debouncedSearch, statusFilter, priorityFilter, page, pageSize),
-    enabled: !!user && user.role !== "ADMIN", // Don't fetch for admins
+    enabled: !!user && user.role !== "ADMIN",
   });
 
   // Show loading while checking user role

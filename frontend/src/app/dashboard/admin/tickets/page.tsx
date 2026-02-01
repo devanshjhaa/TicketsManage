@@ -91,12 +91,10 @@ export default function AllTicketsPage() {
     const pageSize = 20;
     const debouncedSearch = useDebounce(search, 300);
 
-    // Reset page when filters change
     React.useEffect(() => {
         setPage(0);
     }, [debouncedSearch, statusFilter, priorityFilter]);
 
-    // Redirect non-admins
     React.useEffect(() => {
         if (user && user.role !== "ADMIN") {
             router.replace("/dashboard");
@@ -134,9 +132,7 @@ export default function AllTicketsPage() {
             toast({ title: "Ticket assigned successfully" });
         },
         onError: (error: unknown) => {
-            // Check if this is actually a success disguised as error (network/parsing issue)
             console.error("Assign error:", error);
-            // Refetch anyway in case it succeeded
             queryClient.invalidateQueries({ queryKey: ["all-tickets"] });
             toast({ title: "Failed to assign ticket", variant: "destructive" });
         },
@@ -175,10 +171,8 @@ export default function AllTicketsPage() {
     };
 
     const tickets: Ticket[] = Array.isArray(ticketsData) ? ticketsData : (ticketsData?.content || []);
-    // Only SUPPORT_AGENT can be assigned to tickets (not ADMIN)
     const agents = users?.filter(u => u.role === "SUPPORT_AGENT") || [];
 
-    // Show loading while checking role
     if (userLoading || (user && user.role !== "ADMIN")) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -189,7 +183,6 @@ export default function AllTicketsPage() {
 
     return (
         <div className="mx-auto max-w-6xl px-4 py-6 space-y-6">
-            {/* Header */}
             <div className="flex items-center gap-4">
                 <Button variant="outline" size="icon" onClick={() => router.push("/dashboard")}>
                     <ArrowLeft className="h-4 w-4" />
@@ -209,7 +202,6 @@ export default function AllTicketsPage() {
                 </Button>
             </div>
 
-            {/* Filters */}
             <div className="flex flex-wrap items-center gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
                 <div className="relative flex-1 min-w-[200px]">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -247,7 +239,6 @@ export default function AllTicketsPage() {
                 </Select>
             </div>
 
-            {/* Table */}
             <div className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
                 <Table>
                     <TableHeader>
@@ -396,7 +387,6 @@ export default function AllTicketsPage() {
                 </Table>
             </div>
 
-            {/* Pagination */}
             {ticketsData && (
                 <div className="flex items-center justify-between px-2 py-4">
                     <p className="text-sm text-muted-foreground">
